@@ -404,13 +404,30 @@
     function openSetup() {
       if (!el.setupModal.contains(el.setupForm)) el.setupModal.querySelector(".app-modal-panel").appendChild(el.setupForm);
       el.setupForm.querySelector("button[type='submit']").textContent = "Save profile";
-      el.setupModal.showModal();
+      showModal(el.setupModal);
     }
 
     function openSettings() {
       el.settingsFormHost.appendChild(el.setupForm);
       el.setupForm.querySelector("button[type='submit']").textContent = "Save settings";
-      el.settingsModal.showModal();
+      showModal(el.settingsModal);
+    }
+
+    function lockPageScroll() {
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+    }
+
+    function unlockPageScroll() {
+      if (!el.modal.open && !el.settingsModal.open && !el.setupModal.open) {
+        document.documentElement.style.overflow = "";
+        document.body.style.overflow = "";
+      }
+    }
+
+    function showModal(modal) {
+      lockPageScroll();
+      modal.showModal();
     }
 
     function normalizeFlightNumber(token) {
@@ -759,7 +776,7 @@
       el.modalSkipped.innerHTML = day.skipped.length
         ? `<div class="rounded-md bg-[#f6f0fa] p-3 text-sm text-[#6d5a7f]">Skipped: ${day.skipped.map((flight) => `${flight.flightNumber} (${flight.reason})`).join(", ")}</div>`
         : "";
-      el.modal.showModal();
+      showModal(el.modal);
       refreshIcons();
     }
 
@@ -820,6 +837,9 @@
     el.settingsModal.addEventListener("click", (event) => {
       if (event.target === el.settingsModal) el.settingsModal.close();
     });
+    el.modal.addEventListener("close", unlockPageScroll);
+    el.settingsModal.addEventListener("close", unlockPageScroll);
+    el.setupModal.addEventListener("close", unlockPageScroll);
 
     async function restoreSavedPdf() {
       try {
