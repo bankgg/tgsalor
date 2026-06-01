@@ -1,0 +1,3 @@
+# This site is private — block all crawlers
+User-agent: *
+Disallow: /
