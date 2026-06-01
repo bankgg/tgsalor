@@ -144,14 +144,28 @@
     </section>
 
     <section class="surface rounded-lg border p-4 shadow-sm sm:p-5">
-      <div class="border-b border-[#e5d8ef] pb-4">
-        <p class="muted-copy text-sm font-medium">Monthly income</p>
-        <p id="grandTotal" class="mt-1 text-3xl font-semibold">?0</p>
+      <div>
+        <p class="muted-copy text-sm font-medium">Monthly totals</p>
         <p id="profileSummary" class="muted-copy mt-1 text-sm">Set role and base salary to begin.</p>
+        <div class="mt-3 grid gap-3 sm:grid-cols-2">
+          <div class="rounded-lg bg-[#370E62] p-4 text-white">
+            <p class="text-sm font-medium text-[#e5d8ef]">Receive this month</p>
+            <p id="grandTotal" class="mt-1 text-3xl font-semibold">?0</p>
+            <p class="mt-1 text-xs text-[#e5d8ef]">Base salary + next-day flying income</p>
+          </div>
+          <div class="rounded-lg border border-[#e5d8ef] bg-[#f6f0fa] p-4">
+            <p class="muted-copy text-sm font-medium">Full month earned</p>
+            <p id="earnedTotal" class="mt-1 text-3xl font-semibold">?0</p>
+            <p class="muted-copy mt-1 text-xs">Includes next-month payslip items</p>
+          </div>
+        </div>
       </div>
-      <div class="mt-4">
-        <p class="muted-copy text-sm font-medium">Per-diem and allowances</p>
-        <p id="allowanceTotal" class="mt-1 text-2xl font-semibold text-[#190727]">?0</p>
+      <div class="mt-5 flex items-end justify-between gap-3 border-t border-[#e5d8ef] pt-4">
+        <div>
+          <p class="muted-copy text-sm font-medium">Allowance breakdown</p>
+          <p class="text-xs text-[#8a6b9e]">Earned from this schedule, grouped by pay timing.</p>
+        </div>
+        <p id="allowanceTotal" class="shrink-0 text-xl font-semibold text-[#190727]">?0</p>
       </div>
       <div class="mt-3 grid gap-3 md:grid-cols-2">
         <section class="rounded-lg border border-[#e5d8ef] bg-white p-3">
@@ -371,6 +385,7 @@
       dayBonusTotal: document.getElementById("dayBonusTotal"),
       dayCount: document.getElementById("dayCount"),
       grandTotal: document.getElementById("grandTotal"),
+      earnedTotal: document.getElementById("earnedTotal"),
       flightCount: document.getElementById("flightCount"),
       profileSummary: document.getElementById("profileSummary"),
       modal: document.getElementById("dayModal"),
@@ -499,7 +514,7 @@
     function updateProfileSummary() {
       const role = ROLE_RATES[getSelectedRoleRate()] || "Role not set";
       const salary = formatTHB(Number(el.baseSalary.value || 0));
-      el.profileSummary.textContent = `${role} · Base ${salary}`;
+      el.profileSummary.textContent = `${role} · Base salary ${salary}`;
       updateScheduleHeader();
     }
 
@@ -830,6 +845,7 @@
       const nextMonthPay = days.reduce((sum, day) => sum + day.nextMonthPay, 0);
       const allowanceTotal = blockPay + landingPay + redEyePay + dayBonus;
       const baseSalary = Number(el.baseSalary.value || 0);
+      const receivedThisMonth = baseSalary + nextDayPay;
       return {
         ...state.schedule,
         days,
@@ -845,7 +861,8 @@
         nextMonthPay,
         allowanceTotal,
         baseSalary,
-        grandTotal: allowanceTotal + baseSalary,
+        grandTotal: receivedThisMonth,
+        earnedTotal: allowanceTotal + baseSalary,
         flightCount: days.reduce((sum, day) => sum + day.flights.length, 0)
       };
     }
@@ -915,6 +932,7 @@
       el.dayBonusTotal.textContent = formatTHB(schedule?.dayBonus || 0);
       el.dayCount.textContent = `(${schedule?.days.filter((day) => day.dayBonus > 0).length || 0})`;
       el.grandTotal.textContent = formatTHB(schedule?.grandTotal || 0);
+      el.earnedTotal.textContent = formatTHB(schedule?.earnedTotal || 0);
       el.flightCount.textContent = `(${schedule?.flightCount || 0})`;
       updateProfileSummary();
     }
