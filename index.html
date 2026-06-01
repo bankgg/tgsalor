@@ -34,6 +34,12 @@
       font-weight: 600;
       color: #0f766e;
     }
+    .calendar-total {
+      max-width: 100%;
+      line-height: 1.1;
+      font-size: clamp(0.58rem, 2.55vw, 0.875rem);
+      white-space: nowrap;
+    }
     dialog.app-modal {
       border: 0;
       padding: 0;
@@ -63,88 +69,29 @@
   </style>
 </head>
 <body class="text-slate-900">
-  <main class="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-    <section class="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-      <div class="rounded-lg border border-slate-200 bg-white/90 p-5 shadow-sm">
-        <div class="mb-5 flex items-center justify-between gap-4">
-          <div>
-            <p class="text-sm font-medium uppercase tracking-wide text-teal-700">Thai Airways</p>
-            <h1 class="text-2xl font-semibold tracking-normal sm:text-3xl">Pilot Income Planner</h1>
-          </div>
-          <div class="flex h-11 w-11 items-center justify-center rounded-lg bg-teal-600 text-white">
-            <i data-lucide="calculator" class="h-5 w-5"></i>
-          </div>
-        </div>
-
-        <div class="grid gap-4 md:grid-cols-2">
-          <label class="form-control">
-            <span class="label-text font-medium">Role</span>
-            <select id="roleSelect" class="select select-bordered w-full">
-              <option value="1250">Co-pilot</option>
-              <option value="1750">Senior Co-pilot</option>
-              <option value="2500">Captain</option>
-            </select>
-          </label>
-
-          <label class="form-control">
-            <span class="label-text font-medium">Base salary</span>
-            <label class="input input-bordered flex items-center gap-2">
-              <span class="text-slate-500">THB</span>
-              <input id="baseSalaryInput" type="number" min="0" step="1" class="grow" placeholder="0">
-            </label>
-          </label>
-
-          <label class="form-control md:col-span-2">
-            <span class="label-text font-medium">Schedule PDF</span>
-            <input id="pdfInput" type="file" accept="application/pdf" class="file-input file-input-bordered w-full">
-          </label>
-        </div>
+  <main class="mx-auto flex w-full max-w-5xl flex-col gap-4 px-3 py-4 sm:px-5 sm:py-6">
+    <header class="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white/90 px-4 py-3 shadow-sm">
+      <div class="min-w-0">
+        <p class="text-xs font-medium uppercase tracking-wide text-teal-700">Thai Airways</p>
+        <h1 class="text-lg font-semibold leading-tight tracking-normal min-[380px]:text-xl sm:text-2xl">Income Planner</h1>
       </div>
-
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-        <div class="rounded-lg border border-slate-200 bg-white/90 p-5 shadow-sm">
-          <div class="flex items-start justify-between">
-            <div>
-              <p class="text-sm font-medium text-slate-500">Per-diem and allowances</p>
-              <p id="allowanceTotal" class="mt-1 text-3xl font-semibold">0 THB</p>
-            </div>
-            <i data-lucide="wallet-cards" class="h-5 w-5 text-teal-700"></i>
-          </div>
-          <div class="mt-4 grid grid-cols-3 gap-2 text-sm">
-            <div class="rounded-md bg-slate-100 p-3">
-              <p class="text-slate-500">Block</p>
-              <p id="blockTotal" class="font-semibold">0 THB</p>
-            </div>
-            <div class="rounded-md bg-slate-100 p-3">
-              <p class="text-slate-500">Landings</p>
-              <p id="landingTotal" class="font-semibold">0 THB</p>
-            </div>
-            <div class="rounded-md bg-slate-100 p-3">
-              <p class="text-slate-500">Days</p>
-              <p id="dayBonusTotal" class="font-semibold">0 THB</p>
-            </div>
-          </div>
+      <div class="flex shrink-0 items-center gap-2">
+        <div id="effectiveBadge" class="hidden rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-center">
+          <p class="text-[0.65rem] font-semibold uppercase tracking-wide text-teal-700">Effective</p>
+          <p id="effectiveText" class="text-sm font-semibold leading-tight text-teal-900"></p>
         </div>
-
-        <div class="rounded-lg border border-slate-200 bg-slate-950 p-5 text-white shadow-sm">
-          <div class="flex items-start justify-between">
-            <div>
-              <p class="text-sm font-medium text-slate-300">Predictable monthly income</p>
-              <p id="grandTotal" class="mt-1 text-3xl font-semibold">0 THB</p>
-            </div>
-            <i data-lucide="badge-check" class="h-5 w-5 text-teal-300"></i>
-          </div>
-          <div class="mt-4 flex items-center justify-between rounded-md bg-white/10 px-3 py-2 text-sm">
-            <span class="text-slate-300">Counted flights</span>
-            <span id="flightCount" class="font-semibold">0</span>
-          </div>
-        </div>
+        <label id="headerPdfLabel" for="pdfInput" class="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-teal-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 active:bg-teal-800">
+          <i data-lucide="upload" class="h-4 w-4"></i>
+          <span>PDF</span>
+        </label>
+        <input id="pdfInput" type="file" accept="application/pdf" class="sr-only">
+        <button id="settingsButton" type="button" class="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-100" aria-label="Settings">
+          <i data-lucide="settings" class="h-5 w-5"></i>
+        </button>
       </div>
-    </section>
+    </header>
 
-    <section id="statusBox" class="rounded-lg border border-slate-200 bg-white/80 p-4 text-sm text-slate-600 shadow-sm">
-      Select a role, enter base salary, and upload the monthly schedule PDF.
-    </section>
+    <section id="statusBox" class="hidden rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 shadow-sm"></section>
 
     <section class="overflow-hidden rounded-lg border border-slate-200 bg-white/90 shadow-sm">
       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
@@ -154,7 +101,6 @@
         </div>
         <div class="badge badge-outline gap-2 border-teal-200 bg-teal-50 text-teal-800">
           <i data-lucide="circle-dollar-sign" class="h-4 w-4"></i>
-          <span>THB</span>
         </div>
       </div>
       <div class="grid grid-cols-7 border-b border-slate-200 bg-slate-100 text-center text-xs font-semibold uppercase text-slate-500">
@@ -168,7 +114,92 @@
       </div>
       <div id="calendarGrid" class="grid grid-cols-7 bg-slate-200 gap-px"></div>
     </section>
+
+    <section class="rounded-lg border border-slate-200 bg-white/90 p-4 shadow-sm sm:p-5">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p class="text-sm font-medium text-slate-500">Monthly income</p>
+          <p id="grandTotal" class="mt-1 text-3xl font-semibold">฿0</p>
+          <p id="profileSummary" class="mt-1 text-sm text-slate-500">Set role and base salary to begin.</p>
+        </div>
+        <div class="rounded-lg bg-slate-100 px-4 py-3 sm:min-w-56">
+          <p class="text-sm text-slate-500">Per-diem and allowances</p>
+          <p id="allowanceTotal" class="mt-1 text-2xl font-semibold text-slate-950">฿0</p>
+        </div>
+      </div>
+      <div class="mt-4 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
+        <div class="rounded-md bg-slate-100 p-3">
+          <p class="text-slate-500">Block</p>
+          <p id="blockTotal" class="font-semibold">฿0</p>
+        </div>
+        <div class="rounded-md bg-slate-100 p-3">
+          <p class="text-slate-500">Landings</p>
+          <p id="landingTotal" class="font-semibold">฿0</p>
+        </div>
+        <div class="rounded-md bg-slate-100 p-3">
+          <p class="text-slate-500">Days</p>
+          <p id="dayBonusTotal" class="font-semibold">฿0</p>
+        </div>
+        <div class="rounded-md bg-slate-100 p-3">
+          <p class="text-slate-500">Flights</p>
+          <p id="flightCount" class="font-semibold">0</p>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <dialog id="setupModal" class="app-modal">
+    <div class="app-modal-panel">
+      <div class="border-b border-slate-200 bg-white px-5 py-4">
+        <p class="text-sm font-medium uppercase tracking-wide text-teal-700">First time setup</p>
+        <h2 class="text-xl font-semibold">Set your income profile</h2>
+      </div>
+      <form id="setupForm" class="grid gap-4 px-5 py-5">
+        <label class="grid gap-2">
+          <span class="text-sm font-medium">Role</span>
+          <select id="roleSelect" class="cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-3 text-base shadow-sm outline-none transition hover:border-teal-500 focus:border-teal-600 focus:ring-2 focus:ring-teal-100">
+            <option value="1250">Co-pilot</option>
+            <option value="1750">Senior Co-pilot</option>
+            <option value="2500">Captain</option>
+          </select>
+        </label>
+        <label class="grid gap-2">
+          <span class="text-sm font-medium">Base salary</span>
+          <span class="flex items-center rounded-lg border border-slate-300 bg-white px-3 py-3 shadow-sm transition focus-within:border-teal-600 focus-within:ring-2 focus-within:ring-teal-100">
+            <span class="text-slate-500">฿</span>
+            <input id="baseSalaryInput" type="number" min="0" step="1" class="ml-2 grow cursor-text bg-transparent text-base outline-none" placeholder="0">
+          </span>
+        </label>
+        <button type="submit" class="mt-2 inline-flex cursor-pointer items-center justify-center rounded-lg bg-teal-600 px-4 py-3 font-semibold text-white shadow-sm transition hover:bg-teal-700 active:bg-teal-800">Save profile</button>
+      </form>
+    </div>
+  </dialog>
+
+  <dialog id="settingsModal" class="app-modal">
+    <div class="app-modal-panel">
+      <div class="sticky top-0 z-10 border-b border-slate-200 bg-white px-5 py-4 relative">
+        <form method="dialog">
+          <button class="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900" aria-label="Close">
+            <i data-lucide="x" class="h-4 w-4"></i>
+          </button>
+        </form>
+        <h2 class="pr-10 text-xl font-semibold">Settings</h2>
+        <p class="mt-1 text-sm text-slate-500">Update your saved role, base salary, or schedule PDF.</p>
+      </div>
+      <div class="grid gap-5 px-5 py-5">
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <p class="text-sm font-medium text-slate-700">Schedule PDF</p>
+          <p id="settingsPdfSummary" class="mt-1 text-sm text-slate-500">No PDF saved.</p>
+          <label for="settingsPdfInput" class="mt-3 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-teal-200 bg-white px-4 py-3 text-sm font-semibold text-teal-700 shadow-sm transition hover:bg-teal-50 active:bg-teal-100">
+            <i data-lucide="refresh-cw" class="h-4 w-4"></i>
+            <span>Replace PDF</span>
+          </label>
+          <input id="settingsPdfInput" type="file" accept="application/pdf" class="sr-only">
+        </div>
+        <div id="settingsFormHost"></div>
+      </div>
+    </div>
+  </dialog>
 
   <dialog id="dayModal" class="app-modal">
     <div class="app-modal-panel">
@@ -193,6 +224,10 @@
       "1250": "Co-pilot",
       "1750": "Senior Co-pilot",
       "2500": "Captain"
+    };
+    const STORAGE_KEYS = {
+      profile: "pilotIncomeProfile",
+      pdf: "pilotIncomeSchedulePdf"
     };
     const LANDING_ALLOWANCE = 500;
     const FLIGHT_DAY_ALLOWANCE = 1000;
@@ -439,13 +474,24 @@
     const state = {
       destinations: new Map(),
       schedule: null,
-      lastParsedFile: null
+      lastParsedFile: null,
+      savedPdfName: ""
     };
 
     const el = {
       role: document.getElementById("roleSelect"),
       baseSalary: document.getElementById("baseSalaryInput"),
       pdf: document.getElementById("pdfInput"),
+      settingsPdf: document.getElementById("settingsPdfInput"),
+      pdfLabel: document.getElementById("headerPdfLabel"),
+      effectiveBadge: document.getElementById("effectiveBadge"),
+      effectiveText: document.getElementById("effectiveText"),
+      settingsPdfSummary: document.getElementById("settingsPdfSummary"),
+      settingsButton: document.getElementById("settingsButton"),
+      setupModal: document.getElementById("setupModal"),
+      settingsModal: document.getElementById("settingsModal"),
+      setupForm: document.getElementById("setupForm"),
+      settingsFormHost: document.getElementById("settingsFormHost"),
       status: document.getElementById("statusBox"),
       monthTitle: document.getElementById("monthTitle"),
       calendarSubtitle: document.getElementById("calendarSubtitle"),
@@ -456,6 +502,7 @@
       dayBonusTotal: document.getElementById("dayBonusTotal"),
       grandTotal: document.getElementById("grandTotal"),
       flightCount: document.getElementById("flightCount"),
+      profileSummary: document.getElementById("profileSummary"),
       modal: document.getElementById("dayModal"),
       modalTitle: document.getElementById("modalTitle"),
       modalSummary: document.getElementById("modalSummary"),
@@ -472,7 +519,102 @@
     }
 
     function formatTHB(value) {
-      return `${Math.round(value).toLocaleString("en-US")} THB`;
+      return `฿${Math.round(value).toLocaleString("en-US")}`;
+    }
+
+    function getSavedProfile() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEYS.profile) || "null");
+      } catch {
+        return null;
+      }
+    }
+
+    function saveProfile() {
+      const profile = {
+        roleRate: el.role.value,
+        baseSalary: String(Math.max(0, Number(el.baseSalary.value || 0)))
+      };
+      localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify(profile));
+      applyProfile(profile);
+      renderSchedule();
+    }
+
+    function applyProfile(profile) {
+      if (!profile) return;
+      if (ROLE_RATES[profile.roleRate]) el.role.value = profile.roleRate;
+      el.baseSalary.value = profile.baseSalary || "";
+      el.pdf.disabled = false;
+      el.pdfLabel.classList.remove("pointer-events-none", "opacity-50");
+      updateProfileSummary();
+    }
+
+    function updateProfileSummary() {
+      const role = ROLE_RATES[el.role.value] || "Role not set";
+      const salary = formatTHB(Number(el.baseSalary.value || 0));
+      el.profileSummary.textContent = `${role} · Base ${salary}`;
+      updateScheduleHeader();
+    }
+
+    function formatEffectiveRange(range, separator = " - ") {
+      if (!range) return "";
+      const start = range.start.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" });
+      const end = range.end.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" });
+      return `${start}${separator}${end}`;
+    }
+
+    function updateScheduleHeader() {
+      const effective = state.schedule ? formatEffectiveRange(state.schedule.range) : "";
+      const effectiveHtml = state.schedule ? formatEffectiveRange(state.schedule.range, " -<br>") : "";
+      const hasSavedPdf = Boolean(state.savedPdfName || localStorage.getItem(STORAGE_KEYS.pdf));
+      el.effectiveText.innerHTML = effectiveHtml || "Saved schedule";
+      el.settingsPdfSummary.textContent = effective
+        ? effective
+        : (state.savedPdfName || "No PDF saved.");
+      el.effectiveBadge.hidden = !hasSavedPdf;
+      el.effectiveBadge.classList.toggle("hidden", !hasSavedPdf);
+      el.pdfLabel.hidden = hasSavedPdf;
+    }
+
+    function showError(message) {
+      el.status.className = "rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 shadow-sm";
+      el.status.textContent = message;
+      el.status.classList.remove("hidden");
+    }
+
+    function clearStatus() {
+      el.status.textContent = "";
+      el.status.classList.add("hidden");
+    }
+
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function dataUrlToFile(dataUrl, name) {
+      const [meta, base64] = dataUrl.split(",");
+      const mime = meta.match(/data:(.*?);base64/)?.[1] || "application/pdf";
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+      return new File([bytes], name || "saved-schedule.pdf", { type: mime });
+    }
+
+    function openSetup() {
+      if (!el.setupModal.contains(el.setupForm)) el.setupModal.querySelector(".app-modal-panel").appendChild(el.setupForm);
+      el.setupForm.querySelector("button[type='submit']").textContent = "Save profile";
+      el.setupModal.showModal();
+    }
+
+    function openSettings() {
+      el.settingsFormHost.appendChild(el.setupForm);
+      el.setupForm.querySelector("button[type='submit']").textContent = "Save settings";
+      el.settingsModal.showModal();
     }
 
     function parseCsv(text) {
@@ -702,6 +844,8 @@
       const schedule = currentComputedSchedule();
       if (!schedule) {
         renderEmptyCalendar();
+        el.monthTitle.textContent = "Monthly calendar";
+        el.calendarSubtitle.textContent = state.savedPdfName ? "Loading saved schedule" : "Upload a schedule PDF";
         updateTotals(null);
         return;
       }
@@ -730,7 +874,7 @@
               ${day.flights.slice(0, 4).map((flight) => `<span class="flight-chip">${flight.displayNumber}</span>`).join("")}
               ${skippedBadge}
             </span>
-            <span class="mt-auto pt-2 text-sm font-semibold ${hasIncome ? "text-teal-700" : "text-slate-400"}">${hasIncome ? formatTHB(day.total) : ""}</span>
+            <span class="calendar-total mt-auto pt-2 font-semibold ${hasIncome ? "text-teal-700" : "text-slate-400"}">${hasIncome ? formatTHB(day.total) : ""}</span>
           </button>
         `;
       }).join("");
@@ -749,6 +893,7 @@
       el.dayBonusTotal.textContent = formatTHB(schedule?.dayBonus || 0);
       el.grandTotal.textContent = formatTHB(schedule?.grandTotal || 0);
       el.flightCount.textContent = String(schedule?.flightCount || 0);
+      updateProfileSummary();
     }
 
     function openDayModal(dayNumber) {
@@ -794,47 +939,94 @@
       refreshIcons();
     }
 
-    function setStatus(message, tone = "info") {
-      const classes = {
-        info: "border-slate-200 bg-white/80 text-slate-600",
-        ok: "border-teal-200 bg-teal-50 text-teal-800",
-        error: "border-rose-200 bg-rose-50 text-rose-800"
-      };
-      el.status.className = `rounded-lg border p-4 text-sm shadow-sm ${classes[tone]}`;
-      el.status.textContent = message;
-    }
-
-    async function handlePdfChange() {
-      const file = el.pdf.files?.[0];
+    async function processPdfFile(file, shouldSave = true) {
       if (!file) return;
+      clearStatus();
       try {
-        setStatus("Reading schedule and matching flights...");
         if (!state.destinations.size) await loadDestinations();
         state.lastParsedFile = file;
+        state.savedPdfName = file.name;
         state.schedule = await extractSchedule(file);
-        const skipped = state.schedule.days.reduce((sum, day) => sum + day.skipped.length, 0);
-        setStatus(`Schedule ready. ${skipped ? `${skipped} flight(s) were skipped because they are not in destinations.csv.` : "Every detected flight matched destinations.csv."}`, "ok");
+        if (shouldSave) {
+          try {
+            localStorage.setItem(STORAGE_KEYS.pdf, JSON.stringify({
+              name: file.name,
+              dataUrl: await fileToDataUrl(file)
+            }));
+          } catch {
+            showError("Schedule parsed, but this PDF is too large to save in this browser.");
+          }
+        }
         renderSchedule();
+        if (el.settingsModal.open) el.settingsModal.close();
       } catch (error) {
         console.error(error);
-        setStatus(error.message || "The schedule could not be parsed.", "error");
+        showError(error.message || "The schedule could not be parsed.");
       }
     }
 
+    async function handlePdfChange() {
+      await processPdfFile(el.pdf.files?.[0], true);
+      el.pdf.value = "";
+    }
+
+    async function handleSettingsPdfChange() {
+      await processPdfFile(el.settingsPdf.files?.[0], true);
+      el.settingsPdf.value = "";
+    }
+
     async function rerenderAfterRateChange() {
+      updateProfileSummary();
       renderSchedule();
     }
 
     el.pdf.addEventListener("change", handlePdfChange);
+    el.settingsPdf.addEventListener("change", handleSettingsPdfChange);
     el.role.addEventListener("change", rerenderAfterRateChange);
     el.baseSalary.addEventListener("input", rerenderAfterRateChange);
+    el.settingsButton.addEventListener("click", openSettings);
+    el.setupForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      saveProfile();
+      if (el.setupModal.open) el.setupModal.close();
+      if (el.settingsModal.open) el.settingsModal.close();
+    });
     el.modal.addEventListener("click", (event) => {
       if (event.target === el.modal) el.modal.close();
     });
+    el.settingsModal.addEventListener("click", (event) => {
+      if (event.target === el.settingsModal) el.settingsModal.close();
+    });
 
-    renderEmptyCalendar();
-    updateTotals(null);
-    refreshIcons();
+    async function restoreSavedPdf() {
+      try {
+        const savedPdf = JSON.parse(localStorage.getItem(STORAGE_KEYS.pdf) || "null");
+        if (!savedPdf?.dataUrl) return;
+        const file = dataUrlToFile(savedPdf.dataUrl, savedPdf.name);
+        await processPdfFile(file, false);
+      } catch (error) {
+        console.error(error);
+        showError("The saved schedule could not be restored. Upload the PDF again.");
+      }
+    }
+
+    async function initApp() {
+      loadDestinations();
+      const savedProfile = getSavedProfile();
+      if (savedProfile) {
+        applyProfile(savedProfile);
+      } else {
+        el.pdf.disabled = true;
+        el.pdfLabel.classList.add("pointer-events-none", "opacity-50");
+        updateProfileSummary();
+        openSetup();
+      }
+      renderSchedule();
+      await restoreSavedPdf();
+      refreshIcons();
+    }
+
+    initApp();
 
     window.pilotIncomeApp = {
       loadDestinations,
