@@ -604,12 +604,30 @@
       return arr - dep;
     }
 
+    function intervalOverlapsWocl(start, end) {
+      const firstDay = Math.floor(start / 1440) - 1;
+      const lastDay = Math.floor(end / 1440);
+      for (let day = firstDay; day <= lastDay; day += 1) {
+        const windowStart = (day * 1440) + 120;
+        const windowEnd = (day * 1440) + 360;
+        if (start < windowEnd && end > windowStart) return true;
+      }
+      return false;
+    }
+
     function overlapsWocl(depTime, arrTime, depStation, arrStation) {
-      const dep = localTimeToUtcTimeline(depTime, depStation);
-      let arr = localTimeToUtcTimeline(arrTime, arrStation);
-      if (dep === null || arr === null) return false;
-      if (arr <= dep) arr += 24 * 60;
-      return (dep < 360 && arr > 120) || (dep < 1800 && arr > 1560);
+      const depUtc = localTimeToUtcTimeline(depTime, depStation);
+      let arrUtc = localTimeToUtcTimeline(arrTime, arrStation);
+      const depOffset = STATION_TIMEZONES[depStation];
+      const arrOffset = STATION_TIMEZONES[arrStation];
+      if (depUtc === null || arrUtc === null || depOffset === undefined || arrOffset === undefined) return false;
+      if (arrUtc <= depUtc) arrUtc += 24 * 60;
+      const depStationLocalStart = depUtc + depOffset;
+      const depStationLocalEnd = arrUtc + depOffset;
+      const arrStationLocalStart = depUtc + arrOffset;
+      const arrStationLocalEnd = arrUtc + arrOffset;
+      return intervalOverlapsWocl(depStationLocalStart, depStationLocalEnd)
+        || intervalOverlapsWocl(arrStationLocalStart, arrStationLocalEnd);
     }
 
     function findColumnItem(items, matcher, yMin, yMax) {
