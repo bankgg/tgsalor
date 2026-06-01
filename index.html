@@ -137,11 +137,11 @@
           <p id="landingTotal" class="font-semibold">฿0</p>
         </div>
         <div class="rounded-md bg-slate-100 p-3">
-          <p class="text-slate-500">Red-eye</p>
+          <p class="text-slate-500">Red-eye <span id="redEyeCount">(0)</span></p>
           <p id="redEyeTotal" class="font-semibold">฿0</p>
         </div>
         <div class="rounded-md bg-slate-100 p-3">
-          <p class="text-slate-500">Days</p>
+          <p class="text-slate-500">Days <span id="dayCount">(0)</span></p>
           <p id="dayBonusTotal" class="font-semibold">฿0</p>
         </div>
       </div>
@@ -266,7 +266,9 @@
       blockHoursTotal: document.getElementById("blockHoursTotal"),
       landingTotal: document.getElementById("landingTotal"),
       redEyeTotal: document.getElementById("redEyeTotal"),
+      redEyeCount: document.getElementById("redEyeCount"),
       dayBonusTotal: document.getElementById("dayBonusTotal"),
+      dayCount: document.getElementById("dayCount"),
       grandTotal: document.getElementById("grandTotal"),
       flightCount: document.getElementById("flightCount"),
       profileSummary: document.getElementById("profileSummary"),
@@ -599,6 +601,7 @@
       const blockPay = days.reduce((sum, day) => sum + day.blockPay, 0);
       const landingPay = days.reduce((sum, day) => sum + day.landingPay, 0);
       const redEyePay = days.reduce((sum, day) => sum + day.redEyePay, 0);
+      const redEyeCount = days.reduce((sum, day) => sum + day.flights.filter((flight) => flight.redEye).length, 0);
       const dayBonus = days.reduce((sum, day) => sum + day.dayBonus, 0);
       const allowanceTotal = blockPay + landingPay + redEyePay + dayBonus;
       const baseSalary = Number(el.baseSalary.value || 0);
@@ -611,6 +614,7 @@
         blockPay,
         landingPay,
         redEyePay,
+        redEyeCount,
         dayBonus,
         allowanceTotal,
         baseSalary,
@@ -677,7 +681,9 @@
       el.blockHoursTotal.textContent = `(${formatBlockMinutes(schedule?.blockMinutes || 0)})`;
       el.landingTotal.textContent = formatTHB(schedule?.landingPay || 0);
       el.redEyeTotal.textContent = formatTHB(schedule?.redEyePay || 0);
+      el.redEyeCount.textContent = `(${schedule?.redEyeCount || 0})`;
       el.dayBonusTotal.textContent = formatTHB(schedule?.dayBonus || 0);
+      el.dayCount.textContent = `(${schedule?.days.filter((day) => day.flights.length).length || 0})`;
       el.grandTotal.textContent = formatTHB(schedule?.grandTotal || 0);
       el.flightCount.textContent = `(${schedule?.flightCount || 0})`;
       updateProfileSummary();
