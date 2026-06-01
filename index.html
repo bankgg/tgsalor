@@ -309,7 +309,7 @@
       <p id="modalSummary" class="mt-1 text-sm text-[#6d5a7f]"></p>
       </div>
       <div class="px-4 py-4 sm:px-5">
-      <div id="modalFlights" class="mt-5 overflow-x-auto"></div>
+      <div id="modalFlights" class="mt-1 -mb-3 overflow-x-auto"></div>
       <div id="modalSkipped" class="mt-4"></div>
       </div>
     </div>
@@ -630,19 +630,12 @@
       return false;
     }
 
-    function overlapsWocl(depTime, arrTime, depStation, arrStation) {
-      const depUtc = localTimeToUtcTimeline(depTime, depStation);
-      let arrUtc = localTimeToUtcTimeline(arrTime, arrStation);
-      const depOffset = STATION_TIMEZONES[depStation];
-      const arrOffset = STATION_TIMEZONES[arrStation];
-      if (depUtc === null || arrUtc === null || depOffset === undefined || arrOffset === undefined) return false;
-      if (arrUtc <= depUtc) arrUtc += 24 * 60;
-      const depStationLocalStart = depUtc + depOffset;
-      const depStationLocalEnd = arrUtc + depOffset;
-      const arrStationLocalStart = depUtc + arrOffset;
-      const arrStationLocalEnd = arrUtc + arrOffset;
-      return intervalOverlapsWocl(depStationLocalStart, depStationLocalEnd)
-        || intervalOverlapsWocl(arrStationLocalStart, arrStationLocalEnd);
+    function overlapsWocl(depTime, arrTime) {
+      const dep = timeToMinutes(depTime);
+      let arr = timeToMinutes(arrTime);
+      if (dep === null || arr === null) return false;
+      if (arr <= dep) arr += 24 * 60;
+      return intervalOverlapsWocl(dep, arr);
     }
 
     function findColumnItem(items, matcher, yMin, yMax) {
