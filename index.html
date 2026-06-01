@@ -129,20 +129,20 @@
       </div>
       <div class="mt-4 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
         <div class="rounded-md bg-slate-100 p-3">
-          <p class="text-slate-500">Block</p>
+          <p class="text-slate-500">Block <span id="blockHoursTotal">(0:00)</span></p>
           <p id="blockTotal" class="font-semibold">฿0</p>
         </div>
         <div class="rounded-md bg-slate-100 p-3">
-          <p class="text-slate-500">Landings</p>
+          <p class="text-slate-500">Landings <span id="flightCount">(0)</span></p>
           <p id="landingTotal" class="font-semibold">฿0</p>
+        </div>
+        <div class="rounded-md bg-slate-100 p-3">
+          <p class="text-slate-500">Red-eye</p>
+          <p id="redEyeTotal" class="font-semibold">฿0</p>
         </div>
         <div class="rounded-md bg-slate-100 p-3">
           <p class="text-slate-500">Days</p>
           <p id="dayBonusTotal" class="font-semibold">฿0</p>
-        </div>
-        <div class="rounded-md bg-slate-100 p-3">
-          <p class="text-slate-500">Flights</p>
-          <p id="flightCount" class="font-semibold">0</p>
         </div>
       </div>
     </section>
@@ -229,250 +229,15 @@
       profile: "pilotIncomeProfile",
       pdf: "pilotIncomeSchedulePdf"
     };
-    const LANDING_ALLOWANCE = 500;
+    const LANDING_ALLOWANCE = 650;
+    const RED_EYE_ALLOWANCE = 500;
     const FLIGHT_DAY_ALLOWANCE = 1000;
+    const NON_FLIGHT_DUTIES = new Set(["TRG", "SBY"]);
     const MONTHS = {
       JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5,
       JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11
     };
-    const EMBEDDED_DESTINATION_CSV = String.raw`#,Station Name,IATA Name,Leg,Flight Number,Block Hours
-1,Ahmedabad,AMD,Outbound,343,4:40:00
-1,Ahmedabad,AMD,Inbound,344,4:25:00
-2,Arlanda,ARN,Outbound,960,11:55:00
-2,Arlanda,ARN,Inbound,961,11:00:00
-3,Bengaluru,BLR,Outbound,325,3:35:00
-3,Bengaluru,BLR,Inbound,326,3:55:00
-4,Mumbai,BOM,Outbound,317,4:30:00
-4,Mumbai,BOM,Outbound,351,4:30:00
-4,Mumbai,BOM,Inbound,318,4:30:00
-4,Mumbai,BOM,Inbound,352,4:30:00
-5,Brussels,BRU,Outbound,934,12:10:00
-5,Brussels,BRU,Inbound,935,11:05:00
-6,Guangzhou,CAN,Outbound,668,3:00:00
-6,Guangzhou,CAN,Inbound,669,3:00:00
-7,Kolkata,CCU,Outbound,313,2:30:00
-7,Kolkata,CCU,Inbound,314,2:40:00
-8,Paris,CDG,Outbound,930,12:05:00
-8,Paris,CDG,Inbound,931,11:15:00
-9,Chiang Rai,CEI,Outbound,130,1:35:00
-9,Chiang Rai,CEI,Outbound,132,1:35:00
-9,Chiang Rai,CEI,Outbound,136,1:20:00
-9,Chiang Rai,CEI,Inbound,131,1:30:00
-9,Chiang Rai,CEI,Inbound,133,1:30:00
-9,Chiang Rai,CEI,Inbound,137,1:20:00
-10,Jakarta,CGK,Outbound,433,3:35:00
-10,Jakarta,CGK,Outbound,435,3:35:00
-10,Jakarta,CGK,Inbound,434,3:30:00
-10,Jakarta,CGK,Inbound,436,3:30:00
-11,Colombo,CMB,Outbound,307,3:45:00
-11,Colombo,CMB,Inbound,308,3:45:00
-12,Chiang Mai,CNX,Outbound,102,1:20:00
-12,Chiang Mai,CNX,Outbound,104,1:20:00
-12,Chiang Mai,CNX,Outbound,106,1:20:00
-12,Chiang Mai,CNX,Outbound,110,1:20:00
-12,Chiang Mai,CNX,Outbound,112,1:20:00
-12,Chiang Mai,CNX,Outbound,120,1:15:00
-12,Chiang Mai,CNX,Inbound,103,1:25:00
-12,Chiang Mai,CNX,Inbound,105,1:25:00
-12,Chiang Mai,CNX,Inbound,107,1:25:00
-12,Chiang Mai,CNX,Inbound,111,1:25:00
-12,Chiang Mai,CNX,Inbound,113,1:25:00
-12,Chiang Mai,CNX,Inbound,121,1:20:00
-13,Copenhagen,CPH,Outbound,950,11:30:00
-13,Copenhagen,CPH,Inbound,951,10:35:00
-14,Chitose,CTS,Outbound,670,6:45:00
-14,Chitose,CTS,Inbound,671,7:00:00
-15,Dhaka,DAC,Outbound,321,2:35:00
-15,Dhaka,DAC,Outbound,339,2:35:00
-15,Dhaka,DAC,Inbound,340,2:30:00
-15,Dhaka,DAC,Inbound,322,2:25:00
-16,Delhi,DEL,Outbound,323,4:30:00
-16,Delhi,DEL,Outbound,315,4:30:00
-16,Delhi,DEL,Outbound,331,4:30:00
-16,Delhi,DEL,Inbound,332,4:25:00
-16,Delhi,DEL,Inbound,324,4:25:00
-16,Delhi,DEL,Inbound,316,4:25:00
-17,Denpasar,DPS,Outbound,431,4:20:00
-17,Denpasar,DPS,Outbound,439,4:20:00
-17,Denpasar,DPS,Inbound,432,4:10:00
-17,Denpasar,DPS,Inbound,440,4:10:00
-18,Frankfurt,FRA,Outbound,922,11:35:00
-18,Frankfurt,FRA,Outbound,920,11:30:00
-18,Frankfurt,FRA,Inbound,921,10:40:00
-18,Frankfurt,FRA,Inbound,923,10:50:00
-19,Fukuoka,FUK,Outbound,648,5:20:00
-19,Fukuoka,FUK,Inbound,649,5:30:00
-20,Hanoi,HAN,Outbound,560,1:50:00
-20,Hanoi,HAN,Outbound,564,1:50:00
-20,Hanoi,HAN,Inbound,561,1:50:00
-20,Hanoi,HAN,Inbound,565,1:50:00
-21,Hatyai,HDY,Outbound,259,1:25:00
-21,Hatyai,HDY,Outbound,263,1:30:00
-21,Hatyai,HDY,Outbound,267,1:30:00
-21,Hatyai,HDY,Inbound,260,1:30:00
-21,Hatyai,HDY,Inbound,264,1:35:00
-21,Hatyai,HDY,Inbound,268,1:35:00
-22,Hong Kong,HKG,Outbound,600,2:45:00
-22,Hong Kong,HKG,Outbound,628,2:50:00
-22,Hong Kong,HKG,Outbound,638,2:45:00
-22,Hong Kong,HKG,Outbound,602,2:50:00
-22,Hong Kong,HKG,Inbound,603,2:40:00
-22,Hong Kong,HKG,Inbound,601,2:40:00
-22,Hong Kong,HKG,Inbound,629,2:50:00
-22,Hong Kong,HKG,Inbound,639,2:40:00
-23,Phuket,HKT,Outbound,201,1:30:00
-23,Phuket,HKT,Outbound,203,1:30:00
-23,Phuket,HKT,Outbound,205,1:30:00
-23,Phuket,HKT,Outbound,207,1:30:00
-23,Phuket,HKT,Outbound,211,1:30:00
-23,Phuket,HKT,Outbound,215,1:30:00
-23,Phuket,HKT,Outbound,217,1:30:00
-23,Phuket,HKT,Outbound,221,1:30:00
-23,Phuket,HKT,Inbound,202,1:30:00
-23,Phuket,HKT,Inbound,204,1:35:00
-23,Phuket,HKT,Inbound,206,1:35:00
-23,Phuket,HKT,Inbound,208,1:35:00
-23,Phuket,HKT,Inbound,212,1:35:00
-23,Phuket,HKT,Inbound,216,1:30:00
-23,Phuket,HKT,Inbound,218,1:35:00
-23,Phuket,HKT,Inbound,222,1:35:00
-24,Haneda,HND,Outbound,660,6:10:00
-24,Haneda,HND,Outbound,682,6:10:00
-24,Haneda,HND,Inbound,661,6:30:00
-24,Haneda,HND,Inbound,683,6:30:00
-25,Hyderabad,HYD,Outbound,329,3:30:00
-25,Hyderabad,HYD,Inbound,330,3:35:00
-26,Seoul,ICN,Outbound,652,5:25:00
-26,Seoul,ICN,Outbound,658,5:25:00
-26,Seoul,ICN,Outbound,656,5:25:00
-26,Seoul,ICN,Inbound,659,5:50:00
-26,Seoul,ICN,Inbound,657,5:50:00
-26,Seoul,ICN,Inbound,653,5:50:00
-27,Islamabad,ISB,Outbound,349,5:10:00
-27,Islamabad,ISB,Inbound,350,5:05:00
-28,Istanbul,IST,Outbound,900,9:45:00
-28,Istanbul,IST,Inbound,901,9:10:00
-29,Krabi,KBV,Outbound,241,1:20:00
-29,Krabi,KBV,Outbound,249,1:20:00
-29,Krabi,KBV,Inbound,242,1:25:00
-29,Krabi,KBV,Inbound,250,1:25:00
-30,Karachi,KHI,Outbound,341,5:00:00
-30,Karachi,KHI,Inbound,342,4:50:00
-31,Kansai,KIX,Outbound,672,5:30:00
-31,Kansai,KIX,Outbound,622,5:31:00
-31,Kansai,KIX,Inbound,623,5:50:00
-31,Kansai,KIX,Inbound,673,5:50:00
-32,Khonkaen,KKC,Outbound,40,1:00:00
-32,Khonkaen,KKC,Outbound,42,1:05:00
-32,Khonkaen,KKC,Outbound,44,1:00:00
-32,Khonkaen,KKC,Outbound,46,1:00:00
-32,Khonkaen,KKC,Inbound,41,1:05:00
-32,Khonkaen,KKC,Inbound,43,1:10:00
-32,Khonkaen,KKC,Inbound,45,1:10:00
-32,Khonkaen,KKC,Inbound,47,1:00:00
-33,Kunming,KMG,Outbound,612,2:15:00
-33,Kunming,KMG,Inbound,613,2:10:00
-34,Techo International Airport,KTI,Outbound,586,1:20:00
-34,Techo International Airport,KTI,Outbound,584,1:20:00
-34,Techo International Airport,KTI,Inbound,587,1:20:00
-34,Techo International Airport,KTI,Inbound,585,1:20:00
-35,Kathmandu,KTM,Outbound,319,3:25:00
-35,Kathmandu,KTM,Outbound,309,3:25:00
-35,Kathmandu,KTM,Inbound,310,3:30:00
-35,Kathmandu,KTM,Inbound,320,3:30:00
-36,Kuala Lumpur,KUL,Outbound,415,2:10:00
-36,Kuala Lumpur,KUL,Outbound,417,2:10:00
-36,Kuala Lumpur,KUL,Inbound,416,2:10:00
-36,Kuala Lumpur,KUL,Inbound,418,2:10:00
-37,Lahore,LHE,Outbound,345,4:40:00
-37,Lahore,LHE,Inbound,346,4:30:00
-38,London,LHR,Outbound,910,12:30:00
-38,London,LHR,Outbound,916,12:30:00
-38,London,LHR,Inbound,911,11:30:00
-38,London,LHR,Inbound,917,11:35:00
-39,Chennai,MAA,Outbound,337,3:20:00
-39,Chennai,MAA,Inbound,338,3:30:00
-40,Melbourne,MEL,Outbound,461,8:50:00
-40,Melbourne,MEL,Outbound,465,8:50:00
-40,Melbourne,MEL,Inbound,466,9:30:00
-40,Melbourne,MEL,Inbound,462,9:30:00
-41,Manila,MNL,Outbound,620,3:20:00
-41,Manila,MNL,Outbound,624,3:25:00
-41,Manila,MNL,Inbound,621,3:30:00
-41,Manila,MNL,Inbound,625,3:20:00
-42,Munich,MUC,Outbound,924,11:15:00
-42,Munich,MUC,Inbound,925,10:40:00
-43,Malpensa,MXP,Outbound,940,11:40:00
-43,Malpensa,MXP,Inbound,941,10:50:00
-44,Nagoya,NGO,Outbound,644,5:55:00
-44,Nagoya,NGO,Inbound,645,6:00:00
-45,Narita,NRT,Outbound,676,6:10:00
-45,Narita,NRT,Outbound,642,6:20:00
-45,Narita,NRT,Inbound,643,6:30:00
-45,Narita,NRT,Inbound,677,6:30:00
-46,Oslo,OSL,Outbound,954,12:20:00
-46,Oslo,OSL,Inbound,955,11:30:00
-47,Beijing,PEK,Outbound,614,4:45:00
-47,Beijing,PEK,Outbound,674,4:40:00
-47,Beijing,PEK,Inbound,675,5:10:00
-47,Beijing,PEK,Inbound,615,5:10:00
-48,Penang,PEN,Outbound,425,1:50:00
-48,Penang,PEN,Inbound,426,1:50:00
-49,Perth,PER,Outbound,483,6:44:00
-49,Perth,PER,Inbound,484,7:05:00
-50,Shanghai,PVG,Outbound,662,4:15:00
-50,Shanghai,PVG,Outbound,664,4:15:00
-50,Shanghai,PVG,Inbound,663,4:35:00
-50,Shanghai,PVG,Inbound,665,4:25:00
-51,Yangon,RGN,Outbound,301,1:30:00
-51,Yangon,RGN,Outbound,303,1:25:00
-51,Yangon,RGN,Inbound,302,1:30:00
-51,Yangon,RGN,Inbound,304,1:30:00
-52,Ho Chi Minh,SGN,Outbound,550,1:30:00
-52,Ho Chi Minh,SGN,Outbound,556,1:30:00
-52,Ho Chi Minh,SGN,Inbound,551,1:25:00
-52,Ho Chi Minh,SGN,Inbound,557,1:25:00
-53,Singapore,SIN,Outbound,403,2:15:00
-53,Singapore,SIN,Outbound,413,2:15:00
-53,Singapore,SIN,Outbound,407,2:15:00
-53,Singapore,SIN,Outbound,409,2:15:00
-53,Singapore,SIN,Outbound,401,2:20:00
-53,Singapore,SIN,Inbound,402,2:20:00
-53,Singapore,SIN,Inbound,404,2:20:00
-53,Singapore,SIN,Inbound,414,2:20:00
-53,Singapore,SIN,Inbound,408,2:20:00
-53,Singapore,SIN,Inbound,410,2:20:00
-54,Sydney,SYD,Outbound,475,9:00:00
-54,Sydney,SYD,Outbound,471,9:00:00
-54,Sydney,SYD,Inbound,476,9:20:00
-54,Sydney,SYD,Inbound,472,9:20:00
-55,Chengdu,TFU,Outbound,618,3:10:00
-55,Chengdu,TFU,Inbound,619,3:05:00
-56,Taipei,TPE,Outbound,632,3:40:00
-56,Taipei,TPE,Outbound,634,3:40:00
-56,Taipei,TPE,Outbound,636,3:55:00
-56,Taipei,TPE,Inbound,637,3:45:00
-56,Taipei,TPE,Inbound,633,3:45:00
-56,Taipei,TPE,Inbound,635,3:45:00
-57,Ubon Ratchathani,UBP,Outbound,20,1:10:00
-57,Ubon Ratchathani,UBP,Outbound,28,1:10:00
-57,Ubon Ratchathani,UBP,Inbound,21,1:15:00
-57,Ubon Ratchathani,UBP,Inbound,29,1:15:00
-58,Udon Thani,UTH,Outbound,2,1:10:00
-58,Udon Thani,UTH,Outbound,4,1:10:00
-58,Udon Thani,UTH,Outbound,8,1:10:00
-58,Udon Thani,UTH,Inbound,3,1:10:00
-58,Udon Thani,UTH,Inbound,5,1:10:00
-58,Udon Thani,UTH,Inbound,9,1:05:00
-59,Vientiane,VTE,Outbound,570,1:15:00
-59,Vientiane,VTE,Outbound,574,1:20:00
-59,Vientiane,VTE,Inbound,571,1:20:00
-59,Vientiane,VTE,Inbound,575,1:25:00
-60,Zurich,ZRH,Outbound,970,11:45:00
-60,Zurich,ZRH,Inbound,971,10:45:00`;
-
     const state = {
-      destinations: new Map(),
       schedule: null,
       lastParsedFile: null,
       savedPdfName: ""
@@ -498,7 +263,9 @@
       calendarGrid: document.getElementById("calendarGrid"),
       allowanceTotal: document.getElementById("allowanceTotal"),
       blockTotal: document.getElementById("blockTotal"),
+      blockHoursTotal: document.getElementById("blockHoursTotal"),
       landingTotal: document.getElementById("landingTotal"),
+      redEyeTotal: document.getElementById("redEyeTotal"),
       dayBonusTotal: document.getElementById("dayBonusTotal"),
       grandTotal: document.getElementById("grandTotal"),
       flightCount: document.getElementById("flightCount"),
@@ -617,76 +384,52 @@
       el.settingsModal.showModal();
     }
 
-    function parseCsv(text) {
-      const rows = [];
-      let row = [];
-      let cell = "";
-      let quoted = false;
-
-      for (let i = 0; i < text.length; i += 1) {
-        const char = text[i];
-        const next = text[i + 1];
-        if (quoted) {
-          if (char === '"' && next === '"') {
-            cell += '"';
-            i += 1;
-          } else if (char === '"') {
-            quoted = false;
-          } else {
-            cell += char;
-          }
-        } else if (char === '"') {
-          quoted = true;
-        } else if (char === ",") {
-          row.push(cell);
-          cell = "";
-        } else if (char === "\n") {
-          row.push(cell);
-          rows.push(row);
-          row = [];
-          cell = "";
-        } else if (char !== "\r") {
-          cell += char;
-        }
-      }
-      if (cell || row.length) {
-        row.push(cell);
-        rows.push(row);
-      }
-      return rows;
-    }
-
-    function minutesFromBlock(time) {
-      const [hours = 0, minutes = 0] = String(time).split(":").map(Number);
-      return (hours * 60) + minutes;
-    }
-
-    function buildDestinationMap(csvText) {
-      const rows = parseCsv(csvText).slice(1);
-      const map = new Map();
-      for (const row of rows) {
-        const [, stationName, iata, leg, flightNumber, blockHours] = row.map((cell) => cell.trim());
-        if (!flightNumber || !blockHours) continue;
-        map.set(String(Number(flightNumber)), {
-          stationName,
-          iata,
-          leg,
-          flightNumber: String(Number(flightNumber)),
-          blockHours,
-          minutes: minutesFromBlock(blockHours)
-        });
-      }
-      return map;
-    }
-
-    async function loadDestinations() {
-      state.destinations = buildDestinationMap(EMBEDDED_DESTINATION_CSV);
-    }
-
     function normalizeFlightNumber(token) {
+      if (NON_FLIGHT_DUTIES.has(String(token).toUpperCase())) return null;
       if (!/^\d{2,4}$/.test(token)) return null;
       const normalized = String(Number(token));
       return normalized === "NaN" ? null : normalized;
+    }
+
+    function timeToMinutes(timeText) {
+      const match = String(timeText).match(/^(\d{2}):(\d{2})$/);
+      if (!match) return null;
+      return (Number(match[1]) * 60) + Number(match[2]);
+    }
+
+    function formatBlockMinutes(minutes) {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return `${hours}:${String(mins).padStart(2, "0")}`;
+    }
+
+    function calculateBlockMinutes(depTime, arrTime) {
+      const dep = timeToMinutes(depTime);
+      let arr = timeToMinutes(arrTime);
+      if (dep === null || arr === null) return null;
+      if (arr <= dep) arr += 24 * 60;
+      return arr - dep;
+    }
+
+    function overlapsWocl(depTime, arrTime) {
+      const dep = timeToMinutes(depTime);
+      let arr = timeToMinutes(arrTime);
+      if (dep === null || arr === null) return false;
+      if (arr <= dep) arr += 24 * 60;
+      return (dep < 360 && arr > 120) || (dep < 1800 && arr > 1560);
+    }
+
+    function findColumnItem(items, matcher, yMin, yMax) {
+      return items
+        .filter((item) => item.y >= yMin && item.y <= yMax && matcher(item.text))
+        .sort((a, b) => (a.y - b.y) || (a.x - b.x))[0] || null;
+    }
+
+    function findNextFlightX(items, rowY, currentX) {
+      const nextFlight = items
+        .filter((item) => item.x > currentX + 2 && item.y >= rowY - 8 && item.y <= rowY + 6 && normalizeFlightNumber(item.text))
+        .sort((a, b) => a.x - b.x)[0];
+      return nextFlight?.x || null;
     }
 
     function parseEffectiveRange(text) {
@@ -731,10 +474,7 @@
 
       if (headers.length < 20) throw new Error("The date columns were not detected on page 1.");
 
-      const headerY = headers.reduce((sum, item) => sum + item.y, 0) / headers.length;
       const duty = items.find((item) => item.text.toUpperCase() === "DUTY" && item.x < 90);
-      const bandTop = duty ? duty.y - 6 : headerY + 8;
-      const bandBottom = bandTop + 78;
 
       const sortedHeaders = [...headers].sort((a, b) => a.x - b.x);
       const boundaries = sortedHeaders.map((header, index) => {
@@ -747,30 +487,67 @@
         };
       });
 
+      const flightRows = items
+        .filter((item) => item.text.toUpperCase() === "FLT" && item.x < 90 && item.y > (duty ? duty.y + 45 : 120))
+        .sort((a, b) => a.y - b.y);
+      if (!flightRows.length) throw new Error("The detailed flight rows were not detected on page 1.");
+
       const days = [];
-      for (const header of boundaries) {
-        const tokens = items
-          .filter((item) => item.x >= header.left && item.x < header.right && item.y >= bandTop && item.y <= bandBottom)
-          .sort((a, b) => (a.y - b.y) || (a.x - b.x))
-          .map((item) => item.text);
+      for (let dayIndex = 0; dayIndex < boundaries.length; dayIndex += 1) {
+        const header = boundaries[dayIndex];
+        const nextHeader = boundaries[dayIndex + 1];
+        const columnItems = items
+          .filter((item) => item.x >= header.left && item.x < header.right)
+          .sort((a, b) => (a.y - b.y) || (a.x - b.x));
+        const nextColumnItems = nextHeader
+          ? items
+            .filter((item) => item.x >= nextHeader.left && item.x < nextHeader.right)
+            .sort((a, b) => (a.y - b.y) || (a.x - b.x))
+          : [];
         const flights = [];
         const skipped = [];
 
-        for (let i = 0; i < tokens.length; i += 1) {
-          const flightNumber = normalizeFlightNumber(tokens[i]);
-          if (!flightNumber) continue;
-          const destinationToken = tokens[i + 1] && /^[A-Z]{3}$/.test(tokens[i + 1]) ? tokens[i + 1] : "";
-          const destination = state.destinations.get(flightNumber);
-          if (destination) {
+        for (const row of flightRows) {
+          const flightItem = findColumnItem(columnItems, (text) => Boolean(normalizeFlightNumber(text)), row.y - 8, row.y + 6);
+          if (!flightItem) continue;
+          const depStation = findColumnItem(columnItems, (text) => /^[A-Z]{3}$/.test(text), row.y + 3, row.y + 18);
+          const depTime = findColumnItem(columnItems, (text) => /^\d{2}:\d{2}$/.test(text), row.y + 10, row.y + 27);
+          const nextFlightX = findNextFlightX(items, row.y, flightItem.x);
+          const arrivalRight = nextFlightX ? nextFlightX - 2 : flightItem.x + 46;
+          const arrivalItems = items.filter((item) => item.x >= flightItem.x - 4 && item.x <= arrivalRight);
+          let arrStation = findColumnItem(arrivalItems, (text) => /^[A-Z]{3}$/.test(text), row.y + 25, row.y + 43);
+          let arrTime = findColumnItem(arrivalItems, (text) => /^\d{2}:\d{2}$/.test(text), row.y + 33, row.y + 52);
+          if (!arrStation || !arrTime) {
+            const nextDayArrivalItems = arrivalItems.filter((item) => item.x > flightItem.x + 8);
+            arrStation = findColumnItem(nextDayArrivalItems, (text) => /^[A-Z]{3}$/.test(text), row.y - 24, row.y - 8);
+            arrTime = findColumnItem(nextDayArrivalItems, (text) => /^\d{2}:\d{2}$/.test(text), row.y - 16, row.y + 1);
+          }
+          if ((!arrStation || !arrTime) && nextColumnItems.length) {
+            const overnightArrStation = findColumnItem(nextColumnItems, (text) => /^[A-Z]{3}$/.test(text), row.y - 38, row.y + 10);
+            const overnightArrTime = findColumnItem(nextColumnItems, (text) => /^\d{2}:\d{2}$/.test(text), row.y - 30, row.y + 18);
+            if (overnightArrStation && overnightArrTime) {
+              arrStation = overnightArrStation;
+              arrTime = overnightArrTime;
+            }
+          }
+          const minutes = calculateBlockMinutes(depTime?.text, arrTime?.text);
+
+          if (depStation && depTime && arrStation && arrTime && minutes !== null) {
             flights.push({
-              ...destination,
-              displayNumber: tokens[i].padStart(3, "0"),
-              pdfDestination: destinationToken
+              flightNumber: normalizeFlightNumber(flightItem.text),
+              displayNumber: flightItem.text.padStart(3, "0"),
+              depStation: depStation.text,
+              depTime: depTime.text,
+              arrStation: arrStation.text,
+              arrTime: arrTime.text,
+              minutes,
+              blockHours: formatBlockMinutes(minutes),
+              redEye: overlapsWocl(depTime.text, arrTime.text)
             });
           } else {
             skipped.push({
-              flightNumber: tokens[i],
-              destination: destinationToken || "Unknown"
+              flightNumber: flightItem.text,
+              reason: "Incomplete flight time details"
             });
           }
         }
@@ -790,23 +567,27 @@
     function computeDay(day, hourlyRate) {
       const flights = day.flights.map((flight) => {
         const blockPay = Math.round((hourlyRate / 60) * flight.minutes);
+        const redEyePay = flight.redEye ? RED_EYE_ALLOWANCE : 0;
         return {
           ...flight,
           blockPay,
           landingPay: LANDING_ALLOWANCE,
-          total: blockPay + LANDING_ALLOWANCE
+          redEyePay,
+          total: blockPay + LANDING_ALLOWANCE + redEyePay
         };
       });
       const blockPay = flights.reduce((sum, flight) => sum + flight.blockPay, 0);
       const landingPay = flights.reduce((sum, flight) => sum + flight.landingPay, 0);
+      const redEyePay = flights.reduce((sum, flight) => sum + flight.redEyePay, 0);
       const dayBonus = flights.length ? FLIGHT_DAY_ALLOWANCE : 0;
       return {
         ...day,
         flights,
         blockPay,
         landingPay,
+        redEyePay,
         dayBonus,
-        total: blockPay + landingPay + dayBonus
+        total: blockPay + landingPay + redEyePay + dayBonus
       };
     }
 
@@ -814,18 +595,22 @@
       if (!state.schedule) return null;
       const rate = Number(el.role.value);
       const days = state.schedule.days.map((day) => computeDay(day, rate));
+      const blockMinutes = days.reduce((sum, day) => sum + day.flights.reduce((daySum, flight) => daySum + flight.minutes, 0), 0);
       const blockPay = days.reduce((sum, day) => sum + day.blockPay, 0);
       const landingPay = days.reduce((sum, day) => sum + day.landingPay, 0);
+      const redEyePay = days.reduce((sum, day) => sum + day.redEyePay, 0);
       const dayBonus = days.reduce((sum, day) => sum + day.dayBonus, 0);
-      const allowanceTotal = blockPay + landingPay + dayBonus;
+      const allowanceTotal = blockPay + landingPay + redEyePay + dayBonus;
       const baseSalary = Number(el.baseSalary.value || 0);
       return {
         ...state.schedule,
         days,
         role: ROLE_RATES[el.role.value],
         rate,
+        blockMinutes,
         blockPay,
         landingPay,
+        redEyePay,
         dayBonus,
         allowanceTotal,
         baseSalary,
@@ -889,10 +674,12 @@
     function updateTotals(schedule) {
       el.allowanceTotal.textContent = formatTHB(schedule?.allowanceTotal || 0);
       el.blockTotal.textContent = formatTHB(schedule?.blockPay || 0);
+      el.blockHoursTotal.textContent = `(${formatBlockMinutes(schedule?.blockMinutes || 0)})`;
       el.landingTotal.textContent = formatTHB(schedule?.landingPay || 0);
+      el.redEyeTotal.textContent = formatTHB(schedule?.redEyePay || 0);
       el.dayBonusTotal.textContent = formatTHB(schedule?.dayBonus || 0);
       el.grandTotal.textContent = formatTHB(schedule?.grandTotal || 0);
-      el.flightCount.textContent = String(schedule?.flightCount || 0);
+      el.flightCount.textContent = `(${schedule?.flightCount || 0})`;
       updateProfileSummary();
     }
 
@@ -910,11 +697,11 @@
               <div class="flex items-start justify-between gap-3">
                 <div>
                   <p class="text-lg font-semibold text-slate-950">${flight.displayNumber}</p>
-                  <p class="text-sm text-slate-500">${flight.iata} · ${flight.leg}</p>
+                  <p class="text-sm text-slate-500">${flight.depStation} ${flight.depTime} → ${flight.arrStation} ${flight.arrTime}</p>
                 </div>
                 <p class="shrink-0 text-right font-semibold text-teal-700">${formatTHB(flight.total)}</p>
               </div>
-              <div class="mt-3 grid grid-cols-3 gap-2 text-sm">
+              <div class="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
                 <div class="rounded-md bg-white p-2">
                   <p class="text-xs text-slate-500">Block</p>
                   <p class="font-medium">${flight.blockHours}</p>
@@ -927,13 +714,17 @@
                   <p class="text-xs text-slate-500">Landing</p>
                   <p class="font-medium">${formatTHB(flight.landingPay)}</p>
                 </div>
+                <div class="rounded-md bg-white p-2">
+                  <p class="text-xs text-slate-500">Red-eye</p>
+                  <p class="font-medium">${formatTHB(flight.redEyePay)}</p>
+                </div>
               </div>
             </div>
           `).join("")}
         </div>
       `;
       el.modalSkipped.innerHTML = day.skipped.length
-        ? `<div class="rounded-md bg-slate-100 p-3 text-sm text-slate-600">Skipped: ${day.skipped.map((flight) => `${flight.flightNumber} ${flight.destination}`).join(", ")}</div>`
+        ? `<div class="rounded-md bg-slate-100 p-3 text-sm text-slate-600">Skipped: ${day.skipped.map((flight) => `${flight.flightNumber} (${flight.reason})`).join(", ")}</div>`
         : "";
       el.modal.showModal();
       refreshIcons();
@@ -943,7 +734,6 @@
       if (!file) return;
       clearStatus();
       try {
-        if (!state.destinations.size) await loadDestinations();
         state.lastParsedFile = file;
         state.savedPdfName = file.name;
         state.schedule = await extractSchedule(file);
@@ -1011,7 +801,6 @@
     }
 
     async function initApp() {
-      loadDestinations();
       const savedProfile = getSavedProfile();
       if (savedProfile) {
         applyProfile(savedProfile);
@@ -1029,7 +818,6 @@
     initApp();
 
     window.pilotIncomeApp = {
-      loadDestinations,
       extractSchedule,
       renderSchedule,
       currentComputedSchedule,
