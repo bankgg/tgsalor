@@ -243,14 +243,12 @@
 
   <dialog id="settingsModal" class="app-modal">
     <div class="app-modal-panel">
-      <div class="sticky top-0 z-10 border-b border-[#e5d8ef] bg-white px-5 py-4 relative">
-        <form method="dialog">
-          <button class="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full text-[#6d5a7f] transition hover:bg-[#f6f0fa] hover:text-slate-900" aria-label="Close">
-            <i data-lucide="x" class="h-4 w-4"></i>
-          </button>
-        </form>
-        <h2 class="pr-10 text-xl font-semibold">Settings</h2>
-        <p class="mt-1 text-sm text-[#6d5a7f]">Update your schedule PDF, calendar amount, role, or base salary.</p>
+      <div class="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-[#e5d8ef] bg-white px-5 py-3">
+        <h2 class="text-xl font-semibold">Settings</h2>
+        <button id="settingsSaveButton" type="button" class="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-[#370E62] px-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2b0b4d] active:bg-[#2b0b4d]" aria-label="Save settings">
+          <i data-lucide="save" class="h-4 w-4"></i>
+          <span>Save</span>
+        </button>
       </div>
       <div class="grid gap-5 px-5 py-5">
         <div class="rounded-lg border border-[#e5d8ef] bg-[#fbf8ff] p-4">
@@ -338,7 +336,8 @@
     const state = {
       schedule: null,
       lastParsedFile: null,
-      savedPdfName: ""
+      savedPdfName: "",
+      settingsBaseline: null
     };
 
     const el = {
@@ -353,6 +352,7 @@
       settingsButton: document.getElementById("settingsButton"),
       setupModal: document.getElementById("setupModal"),
       settingsModal: document.getElementById("settingsModal"),
+      settingsSaveButton: document.getElementById("settingsSaveButton"),
       setupForm: document.getElementById("setupForm"),
       settingsFormHost: document.getElementById("settingsFormHost"),
       calendarAmountModeInputs: Array.from(document.querySelectorAll("input[name='calendarAmountMode']")),
@@ -390,17 +390,6 @@
 
     function openAppModal(modal) {
       modal.showModal();
-      document.documentElement.classList.add("overflow-hidden");
-      document.body.classList.add("overflow-hidden");
-    }
-
-    function bindModalScrollLock(modal) {
-      modal.addEventListener("close", () => {
-        if (!document.querySelector("dialog.app-modal[open]")) {
-          document.documentElement.classList.remove("overflow-hidden");
-          document.body.classList.remove("overflow-hidden");
-        }
-      });
     }
 
     function formatTHB(value) {
@@ -468,6 +457,45 @@
       return el.calendarAmountModeInputs.find((input) => input.checked)?.value || "all";
     }
 
+    function getSettingsSnapshot() {
+      return {
+        roleRate: getSelectedRoleRate(),
+        baseSalary: String(Math.max(0, Number(el.baseSalary.value || 0))),
+        calendarAmountMode: getCalendarAmountMode()
+      };
+    }
+
+    function applySettingsSnapshot(snapshot) {
+      if (!snapshot) return;
+      setSelectedRoleRate(snapshot.roleRate);
+      el.baseSalary.value = snapshot.baseSalary || "";
+      applyDisplaySettings({ calendarAmountMode: snapshot.calendarAmountMode || "all" });
+      updateProfileSummary();
+      renderSchedule();
+    }
+
+    function settingsHaveUnsavedChanges() {
+      if (!state.settingsBaseline) return false;
+      const current = getSettingsSnapshot();
+      return current.roleRate !== state.settingsBaseline.roleRate
+        || current.baseSalary !== state.settingsBaseline.baseSalary
+        || current.calendarAmountMode !== state.settingsBaseline.calendarAmountMode;
+    }
+
+    function closeSettingsWithConfirmation() {
+      if (settingsHaveUnsavedChanges() && !window.confirm("Discard unsaved settings changes?")) return;
+      if (settingsHaveUnsavedChanges()) applySettingsSnapshot(state.settingsBaseline);
+      state.settingsBaseline = null;
+      el.settingsModal.close();
+    }
+
+    function saveSettingsAndClose() {
+      saveProfile();
+      saveDisplaySettings();
+      state.settingsBaseline = null;
+      if (el.settingsModal.open) el.settingsModal.close();
+    }
+
     function updateProfileSummary() {
       const role = ROLE_RATES[getSelectedRoleRate()] || "Role not set";
       const salary = formatTHB(Number(el.baseSalary.value || 0));
@@ -528,14 +556,17 @@
     function openSetup() {
       if (!el.setupModal.contains(el.setupForm)) el.setupModal.querySelector(".app-modal-panel").appendChild(el.setupForm);
       el.setupForm.className = "grid gap-4 px-5 py-5";
-      el.setupForm.querySelector("button[type='submit']").textContent = "Save profile";
+      const submitButton = el.setupForm.querySelector("button[type='submit']");
+      submitButton.textContent = "Save profile";
+      submitButton.hidden = false;
       openAppModal(el.setupModal);
     }
 
     function openSettings() {
       el.settingsFormHost.appendChild(el.setupForm);
       el.setupForm.className = "grid gap-4";
-      el.setupForm.querySelector("button[type='submit']").textContent = "Save settings";
+      el.setupForm.querySelector("button[type='submit']").hidden = true;
+      state.settingsBaseline = getSettingsSnapshot();
       openAppModal(el.settingsModal);
     }
 
@@ -956,7 +987,7 @@
     }
 
     async function processPdfFile(file, shouldSave = true) {
-      if (!file) return;
+      if (!file) return false;
       clearStatus();
       try {
         state.lastParsedFile = file;
@@ -977,10 +1008,11 @@
         if (skipped.length) {
           showError(`Some flights were not counted: ${skipped.join("; ")}`);
         }
-        if (el.settingsModal.open) el.settingsModal.close();
+        return true;
       } catch (error) {
         console.error(error);
         showError(error.message || "The schedule could not be parsed.");
+        return false;
       }
     }
 
@@ -990,8 +1022,9 @@
     }
 
     async function handleSettingsPdfChange() {
-      await processPdfFile(el.settingsPdf.files?.[0], true);
+      const parsed = await processPdfFile(el.settingsPdf.files?.[0], true);
       el.settingsPdf.value = "";
+      if (parsed) saveSettingsAndClose();
     }
 
     async function rerenderAfterRateChange() {
@@ -1003,24 +1036,30 @@
     el.settingsPdf.addEventListener("change", handleSettingsPdfChange);
     for (const input of el.roleInputs) input.addEventListener("change", rerenderAfterRateChange);
     el.baseSalary.addEventListener("input", rerenderAfterRateChange);
-    for (const input of el.calendarAmountModeInputs) input.addEventListener("change", saveDisplaySettings);
+    for (const input of el.calendarAmountModeInputs) input.addEventListener("change", renderSchedule);
     el.settingsButton.addEventListener("click", openSettings);
+    el.settingsSaveButton.addEventListener("click", saveSettingsAndClose);
     el.setupForm.addEventListener("submit", (event) => {
       event.preventDefault();
+      if (el.settingsModal.open) {
+        saveSettingsAndClose();
+        return;
+      }
       saveProfile();
-      if (el.setupModal.open) el.setupModal.close();
-      if (el.settingsModal.open) el.settingsModal.close();
+      if (el.setupModal.open) {
+        el.setupModal.close();
+      }
     });
     el.modal.addEventListener("click", (event) => {
       if (event.target === el.modal) el.modal.close();
     });
     el.settingsModal.addEventListener("click", (event) => {
-      if (event.target === el.settingsModal) el.settingsModal.close();
+      if (event.target === el.settingsModal) closeSettingsWithConfirmation();
     });
-    bindModalScrollLock(el.setupModal);
-    bindModalScrollLock(el.settingsModal);
-    bindModalScrollLock(el.modal);
-
+    el.settingsModal.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      closeSettingsWithConfirmation();
+    });
     async function restoreSavedPdf() {
       try {
         const savedPdf = JSON.parse(localStorage.getItem(STORAGE_KEYS.pdf) || "null");
