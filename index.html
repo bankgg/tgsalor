@@ -12,7 +12,7 @@
   <meta name="twitter:title" content="TG Pilot Income Planner">
   <meta name="twitter:description" content="Monthly pilot income estimation from crew schedule PDFs, including block hours, landings, red-eye flights, and base salary.">
   <title>TG Pilot Income Planner</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23370E62'/%3E%3Cpath d='M44.5 18.1c1.8-1.8 4.7-1.4 5.8.8.9 1.8.3 4-1.2 5.5L36.9 36.6l1.4 10.2c.1.8-.2 1.5-.8 2l-1.6 1.3-3.6-8.5-5.2 5.2-.2 3.6c0 .5-.3 1-.7 1.3l-1.8 1.2-1.5-4.8-4.8-1.5 1.2-1.8c.3-.4.8-.7 1.3-.7l3.6-.2 5.2-5.2-8.5-3.6 1.3-1.6c.5-.6 1.3-.9 2-.8l10.2 1.4z' fill='white'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23370E62'/%3E%3Cg transform='translate(12,12) scale(1.667)'%3E%3Cpath d='M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z' fill='white'/%3E%3C/g%3E%3C/svg%3E">
   <link href="https://cdn.jsdelivr.net/npm/daisyui@5/dist/full.min.css" rel="stylesheet" type="text/css">
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -153,25 +153,45 @@
         <p class="muted-copy text-sm font-medium">Per-diem and allowances</p>
         <p id="allowanceTotal" class="mt-1 text-2xl font-semibold text-[#190727]">?0</p>
       </div>
-      <div class="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-        <div class="soft-panel rounded-md p-3">
-          <p class="muted-copy">Block <span id="blockHoursTotal">(0:00)</span></p>
-          <p id="blockTotal" class="font-semibold">?0</p>
-        </div>
-        <div class="soft-panel rounded-md p-3">
-          <p class="muted-copy">Landings <span id="flightCount">(0)</span></p>
-          <p id="landingTotal" class="font-semibold">?0</p>
-          <p class="mt-1 text-xs text-[#8a6b9e]">Paid with the following month's payroll.</p>
-        </div>
-        <div class="soft-panel rounded-md p-3">
-          <p class="muted-copy">Red-eye <span id="redEyeCount">(0)</span></p>
-          <p id="redEyeTotal" class="font-semibold">?0</p>
-          <p class="mt-1 text-xs text-[#8a6b9e]">Paid with the following month's payroll.</p>
-        </div>
-        <div class="soft-panel rounded-md p-3">
-          <p class="muted-copy">Transportation <span id="dayCount">(0)</span></p>
-          <p id="dayBonusTotal" class="font-semibold">?0</p>
-        </div>
+      <div class="mt-3 grid gap-3 md:grid-cols-2">
+        <section class="rounded-lg border border-[#e5d8ef] bg-white p-3">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="muted-copy text-sm font-medium">Next-day flying income</p>
+              <p class="text-xs text-[#8a6b9e]">Block pay and transportation allowance</p>
+            </div>
+            <p id="nextDayTotal" class="shrink-0 font-semibold">?0</p>
+          </div>
+          <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
+            <div class="soft-panel rounded-md p-3">
+              <p class="muted-copy">Block <span id="blockHoursTotal">(0:00)</span></p>
+              <p id="blockTotal" class="font-semibold">?0</p>
+            </div>
+            <div class="soft-panel rounded-md p-3">
+              <p class="muted-copy">Transportation <span id="dayCount">(0)</span></p>
+              <p id="dayBonusTotal" class="font-semibold">?0</p>
+            </div>
+          </div>
+        </section>
+        <section class="rounded-lg border border-[#e5d8ef] bg-white p-3">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="muted-copy text-sm font-medium">Next-month payslip items</p>
+              <p class="text-xs text-[#8a6b9e]">Paid with the following month's payroll</p>
+            </div>
+            <p id="nextMonthTotal" class="shrink-0 font-semibold">?0</p>
+          </div>
+          <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
+            <div class="soft-panel rounded-md p-3">
+              <p class="muted-copy">Landings <span id="flightCount">(0)</span></p>
+              <p id="landingTotal" class="font-semibold">?0</p>
+            </div>
+            <div class="soft-panel rounded-md p-3">
+              <p class="muted-copy">Red-eye <span id="redEyeCount">(0)</span></p>
+              <p id="redEyeTotal" class="font-semibold">?0</p>
+            </div>
+          </div>
+        </section>
       </div>
     </section>
   </main>
@@ -183,14 +203,32 @@
         <h2 class="text-xl font-semibold">Set your income profile</h2>
       </div>
       <form id="setupForm" class="grid gap-4 px-5 py-5">
-        <label class="grid gap-2">
-          <span class="text-sm font-medium">Role</span>
-          <select id="roleSelect" class="cursor-pointer rounded-lg border border-[#d8c7e7] bg-white px-3 py-3 text-base shadow-sm outline-none transition hover:border-[#B6007D] focus:border-[#370E62] focus:ring-2 focus:ring-[#efe3f6]">
-            <option value="1250">Co-pilot</option>
-            <option value="1750">Senior Co-pilot</option>
-            <option value="2500">Captain</option>
-          </select>
-        </label>
+        <fieldset class="grid gap-2">
+          <legend class="mb-2 text-sm font-medium">Role</legend>
+          <div class="grid gap-2">
+            <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-[#d8c7e7] bg-white p-3 transition hover:border-[#c49add]">
+              <input type="radio" name="roleRate" value="1250" class="radio radio-sm mt-1" checked>
+              <span>
+                <span class="block font-medium">Co-pilot</span>
+                <span class="block text-sm text-[#6d5a7f]">฿1,250 per block hour</span>
+              </span>
+            </label>
+            <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-[#d8c7e7] bg-white p-3 transition hover:border-[#c49add]">
+              <input type="radio" name="roleRate" value="1750" class="radio radio-sm mt-1">
+              <span>
+                <span class="block font-medium">Senior Co-pilot</span>
+                <span class="block text-sm text-[#6d5a7f]">฿1,750 per block hour</span>
+              </span>
+            </label>
+            <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-[#d8c7e7] bg-white p-3 transition hover:border-[#c49add]">
+              <input type="radio" name="roleRate" value="2500" class="radio radio-sm mt-1">
+              <span>
+                <span class="block font-medium">Captain</span>
+                <span class="block text-sm text-[#6d5a7f]">฿2,500 per block hour</span>
+              </span>
+            </label>
+          </div>
+        </fieldset>
         <label class="grid gap-2">
           <span class="text-sm font-medium">Base salary</span>
           <span class="flex items-center rounded-lg border border-[#d8c7e7] bg-white px-3 py-3 shadow-sm transition focus-within:border-[#370E62] focus-within:ring-2 focus-within:ring-[#efe3f6]">
@@ -212,7 +250,7 @@
           </button>
         </form>
         <h2 class="pr-10 text-xl font-semibold">Settings</h2>
-        <p class="mt-1 text-sm text-[#6d5a7f]">Update your saved role, base salary, or schedule PDF.</p>
+        <p class="mt-1 text-sm text-[#6d5a7f]">Update your schedule PDF, calendar amount, role, or base salary.</p>
       </div>
       <div class="grid gap-5 px-5 py-5">
         <div class="rounded-lg border border-[#e5d8ef] bg-[#fbf8ff] p-4">
@@ -224,7 +262,25 @@
           </label>
           <input id="settingsPdfInput" type="file" accept="application/pdf" class="sr-only">
         </div>
-        <div id="settingsFormHost"></div>
+        <fieldset class="grid gap-3 pt-2">
+          <legend class="text-sm font-medium text-[#2a1638]">Amount shown on calendar days</legend>
+          <p class="text-sm text-[#6d5a7f]">Choose how each calendar cell summarizes that day's flying income.</p>
+          <label class="flex cursor-pointer gap-3 rounded-lg border border-[#d8c7e7] bg-white p-3 transition hover:border-[#c49add] hover:bg-white">
+            <input type="radio" name="calendarAmountMode" value="nextDay" class="radio radio-sm mt-1">
+            <span>
+              <span class="block font-medium">Only income paid after flying</span>
+              <span class="block text-sm text-[#6d5a7f]">Shows block pay plus BKK transportation allowance.</span>
+            </span>
+          </label>
+          <label class="flex cursor-pointer gap-3 rounded-lg border border-[#d8c7e7] bg-white p-3 transition hover:border-[#c49add] hover:bg-white">
+            <input type="radio" name="calendarAmountMode" value="all" class="radio radio-sm mt-1">
+            <span>
+              <span class="block font-medium">All earned income for the day</span>
+              <span class="block text-sm text-[#6d5a7f]">Also includes landing and red-eye allowances paid in the next month's payslip.</span>
+            </span>
+          </label>
+        </fieldset>
+        <div id="settingsFormHost" class="border-t border-[#e5d8ef] pt-5"></div>
       </div>
     </div>
   </dialog>
@@ -255,12 +311,26 @@
     };
     const STORAGE_KEYS = {
       profile: "pilotIncomeProfile",
-      pdf: "pilotIncomeSchedulePdf"
+      pdf: "pilotIncomeSchedulePdf",
+      display: "pilotIncomeDisplaySettings"
     };
     const LANDING_ALLOWANCE = 650;
     const RED_EYE_ALLOWANCE = 500;
     const FLIGHT_DAY_ALLOWANCE = 1000;
     const NON_FLIGHT_DUTIES = new Set(["TRG", "SBY"]);
+    const STATION_TIMEZONES = {
+      AMD: 330, ARN: 60, BLR: 330, BOM: 330, BRU: 60, CAN: 480,
+      CCU: 330, CDG: 60, CEI: 420, CGK: 420, CMB: 330, CNX: 420,
+      CPH: 60, CTS: 540, DAC: 360, DEL: 330, DPS: 480, FRA: 60,
+      FUK: 540, HAN: 420, HDY: 420, HKG: 480, HKT: 420, HND: 540,
+      HYD: 330, ICN: 540, ISB: 300, IST: 180, KBV: 420, KHI: 300,
+      KIX: 540, KKC: 420, KMG: 480, KTI: 420, KTM: 345, KUL: 480,
+      LHE: 300, LHR: 0, MAA: 330, MEL: 600, MNL: 480, MUC: 60,
+      MXP: 60, NGO: 540, NRT: 540, OSL: 60, PEK: 480, PEN: 480,
+      PER: 480, PVG: 480, RGN: 390, SGN: 420, SIN: 480, SYD: 600,
+      TFU: 480, TPE: 480, UBP: 420, UTH: 420, VTE: 420, ZRH: 60,
+      BKK: 420, KHH: 480
+    };
     const MONTHS = {
       JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5,
       JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11
@@ -272,7 +342,7 @@
     };
 
     const el = {
-      role: document.getElementById("roleSelect"),
+      roleInputs: Array.from(document.querySelectorAll("input[name='roleRate']")),
       baseSalary: document.getElementById("baseSalaryInput"),
       pdf: document.getElementById("pdfInput"),
       settingsPdf: document.getElementById("settingsPdfInput"),
@@ -285,6 +355,7 @@
       settingsModal: document.getElementById("settingsModal"),
       setupForm: document.getElementById("setupForm"),
       settingsFormHost: document.getElementById("settingsFormHost"),
+      calendarAmountModeInputs: Array.from(document.querySelectorAll("input[name='calendarAmountMode']")),
       status: document.getElementById("statusBox"),
       monthTitle: document.getElementById("monthTitle"),
       calendarSubtitle: document.getElementById("calendarSubtitle"),
@@ -295,6 +366,8 @@
       landingTotal: document.getElementById("landingTotal"),
       redEyeTotal: document.getElementById("redEyeTotal"),
       redEyeCount: document.getElementById("redEyeCount"),
+      nextDayTotal: document.getElementById("nextDayTotal"),
+      nextMonthTotal: document.getElementById("nextMonthTotal"),
       dayBonusTotal: document.getElementById("dayBonusTotal"),
       dayCount: document.getElementById("dayCount"),
       grandTotal: document.getElementById("grandTotal"),
@@ -315,6 +388,21 @@
       if (window.lucide) window.lucide.createIcons();
     }
 
+    function openAppModal(modal) {
+      modal.showModal();
+      document.documentElement.classList.add("overflow-hidden");
+      document.body.classList.add("overflow-hidden");
+    }
+
+    function bindModalScrollLock(modal) {
+      modal.addEventListener("close", () => {
+        if (!document.querySelector("dialog.app-modal[open]")) {
+          document.documentElement.classList.remove("overflow-hidden");
+          document.body.classList.remove("overflow-hidden");
+        }
+      });
+    }
+
     function formatTHB(value) {
       return `฿${Math.round(value).toLocaleString("en-US")}`;
     }
@@ -329,7 +417,7 @@
 
     function saveProfile() {
       const profile = {
-        roleRate: el.role.value,
+        roleRate: getSelectedRoleRate(),
         baseSalary: String(Math.max(0, Number(el.baseSalary.value || 0)))
       };
       localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify(profile));
@@ -339,15 +427,49 @@
 
     function applyProfile(profile) {
       if (!profile) return;
-      if (ROLE_RATES[profile.roleRate]) el.role.value = profile.roleRate;
+      setSelectedRoleRate(profile.roleRate);
       el.baseSalary.value = profile.baseSalary || "";
       el.pdf.disabled = false;
       el.pdfLabel.classList.remove("pointer-events-none", "opacity-50");
       updateProfileSummary();
     }
 
+    function getSelectedRoleRate() {
+      return el.roleInputs.find((input) => input.checked)?.value || "1250";
+    }
+
+    function setSelectedRoleRate(roleRate) {
+      const safeRate = ROLE_RATES[roleRate] ? roleRate : "1250";
+      for (const input of el.roleInputs) input.checked = input.value === safeRate;
+    }
+
+    function getDisplaySettings() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEYS.display) || "null") || { calendarAmountMode: "all" };
+      } catch {
+        return { calendarAmountMode: "all" };
+      }
+    }
+
+    function applyDisplaySettings(settings) {
+      const mode = settings.calendarAmountMode || "all";
+      for (const input of el.calendarAmountModeInputs) input.checked = input.value === mode;
+    }
+
+    function saveDisplaySettings() {
+      const selected = el.calendarAmountModeInputs.find((input) => input.checked)?.value || "all";
+      localStorage.setItem(STORAGE_KEYS.display, JSON.stringify({
+        calendarAmountMode: selected
+      }));
+      renderSchedule();
+    }
+
+    function getCalendarAmountMode() {
+      return el.calendarAmountModeInputs.find((input) => input.checked)?.value || "all";
+    }
+
     function updateProfileSummary() {
-      const role = ROLE_RATES[el.role.value] || "Role not set";
+      const role = ROLE_RATES[getSelectedRoleRate()] || "Role not set";
       const salary = formatTHB(Number(el.baseSalary.value || 0));
       el.profileSummary.textContent = `${role} · Base ${salary}`;
       updateScheduleHeader();
@@ -405,14 +527,16 @@
 
     function openSetup() {
       if (!el.setupModal.contains(el.setupForm)) el.setupModal.querySelector(".app-modal-panel").appendChild(el.setupForm);
+      el.setupForm.className = "grid gap-4 px-5 py-5";
       el.setupForm.querySelector("button[type='submit']").textContent = "Save profile";
-      el.setupModal.showModal();
+      openAppModal(el.setupModal);
     }
 
     function openSettings() {
       el.settingsFormHost.appendChild(el.setupForm);
+      el.setupForm.className = "grid gap-4";
       el.setupForm.querySelector("button[type='submit']").textContent = "Save settings";
-      el.settingsModal.showModal();
+      openAppModal(el.settingsModal);
     }
 
     function normalizeFlightNumber(token) {
@@ -434,17 +558,24 @@
       return `${hours}:${String(mins).padStart(2, "0")}`;
     }
 
-    function calculateBlockMinutes(depTime, arrTime) {
-      const dep = timeToMinutes(depTime);
-      let arr = timeToMinutes(arrTime);
+    function localTimeToUtcTimeline(timeText, station) {
+      const local = timeToMinutes(timeText);
+      const offset = STATION_TIMEZONES[station];
+      if (local === null || offset === undefined) return null;
+      return local - offset;
+    }
+
+    function calculateBlockMinutes(depTime, arrTime, depStation, arrStation) {
+      const dep = localTimeToUtcTimeline(depTime, depStation);
+      let arr = localTimeToUtcTimeline(arrTime, arrStation);
       if (dep === null || arr === null) return null;
       if (arr <= dep) arr += 24 * 60;
       return arr - dep;
     }
 
-    function overlapsWocl(depTime, arrTime) {
-      const dep = timeToMinutes(depTime);
-      let arr = timeToMinutes(arrTime);
+    function overlapsWocl(depTime, arrTime, depStation, arrStation) {
+      const dep = localTimeToUtcTimeline(depTime, depStation);
+      let arr = localTimeToUtcTimeline(arrTime, arrStation);
       if (dep === null || arr === null) return false;
       if (arr <= dep) arr += 24 * 60;
       return (dep < 360 && arr > 120) || (dep < 1800 && arr > 1560);
@@ -561,7 +692,11 @@
               arrTime = overnightArrTime;
             }
           }
-          const minutes = calculateBlockMinutes(depTime?.text, arrTime?.text);
+          const missingTimezones = [depStation?.text, arrStation?.text]
+            .filter((station) => station && STATION_TIMEZONES[station] === undefined);
+          const minutes = missingTimezones.length
+            ? null
+            : calculateBlockMinutes(depTime?.text, arrTime?.text, depStation?.text, arrStation?.text);
 
           if (depStation && depTime && arrStation && arrTime && minutes !== null) {
             flights.push({
@@ -573,12 +708,14 @@
               arrTime: arrTime.text,
               minutes,
               blockHours: formatBlockMinutes(minutes),
-              redEye: overlapsWocl(depTime.text, arrTime.text)
+              redEye: overlapsWocl(depTime.text, arrTime.text, depStation.text, arrStation.text)
             });
           } else {
             skipped.push({
               flightNumber: flightItem.text,
-              reason: "Incomplete flight time details"
+              reason: missingTimezones.length
+                ? `Missing timezone for ${[...new Set(missingTimezones)].join(", ")}`
+                : "Incomplete flight time details"
             });
           }
         }
@@ -604,27 +741,35 @@
           blockPay,
           landingPay: LANDING_ALLOWANCE,
           redEyePay,
+          nextDayPay: blockPay,
+          nextMonthPay: LANDING_ALLOWANCE + redEyePay,
           total: blockPay + LANDING_ALLOWANCE + redEyePay
         };
       });
       const blockPay = flights.reduce((sum, flight) => sum + flight.blockPay, 0);
+      const blockMinutes = flights.reduce((sum, flight) => sum + flight.minutes, 0);
       const landingPay = flights.reduce((sum, flight) => sum + flight.landingPay, 0);
       const redEyePay = flights.reduce((sum, flight) => sum + flight.redEyePay, 0);
-      const dayBonus = flights.length ? FLIGHT_DAY_ALLOWANCE : 0;
+      const dayBonus = flights.some((flight) => flight.depStation === "BKK") ? FLIGHT_DAY_ALLOWANCE : 0;
+      const nextDayPay = blockPay + dayBonus;
+      const nextMonthPay = landingPay + redEyePay;
       return {
         ...day,
         flights,
+        blockMinutes,
         blockPay,
         landingPay,
         redEyePay,
         dayBonus,
+        nextDayPay,
+        nextMonthPay,
         total: blockPay + landingPay + redEyePay + dayBonus
       };
     }
 
     function currentComputedSchedule() {
       if (!state.schedule) return null;
-      const rate = Number(el.role.value);
+      const rate = Number(getSelectedRoleRate());
       const days = state.schedule.days.map((day) => computeDay(day, rate));
       const blockMinutes = days.reduce((sum, day) => sum + day.flights.reduce((daySum, flight) => daySum + flight.minutes, 0), 0);
       const blockPay = days.reduce((sum, day) => sum + day.blockPay, 0);
@@ -632,12 +777,14 @@
       const redEyePay = days.reduce((sum, day) => sum + day.redEyePay, 0);
       const redEyeCount = days.reduce((sum, day) => sum + day.flights.filter((flight) => flight.redEye).length, 0);
       const dayBonus = days.reduce((sum, day) => sum + day.dayBonus, 0);
+      const nextDayPay = days.reduce((sum, day) => sum + day.nextDayPay, 0);
+      const nextMonthPay = days.reduce((sum, day) => sum + day.nextMonthPay, 0);
       const allowanceTotal = blockPay + landingPay + redEyePay + dayBonus;
       const baseSalary = Number(el.baseSalary.value || 0);
       return {
         ...state.schedule,
         days,
-        role: ROLE_RATES[el.role.value],
+        role: ROLE_RATES[getSelectedRoleRate()],
         rate,
         blockMinutes,
         blockPay,
@@ -645,6 +792,8 @@
         redEyePay,
         redEyeCount,
         dayBonus,
+        nextDayPay,
+        nextMonthPay,
         allowanceTotal,
         baseSalary,
         grandTotal: allowanceTotal + baseSalary,
@@ -684,6 +833,7 @@
       el.calendarGrid.innerHTML = cells.map((day) => {
         if (day.blank) return `<div class="calendar-day bg-[#fbf8ff]"></div>`;
         const hasIncome = day.total > 0;
+        const calendarAmount = getCalendarAmountMode() === "all" ? day.total : day.nextDayPay;
         const skippedBadge = day.skipped?.length ? `<span class="badge badge-ghost badge-sm">${day.skipped.length} skipped</span>` : "";
         return `
           <button type="button" data-day="${day.day}" class="calendar-day flex w-full flex-col bg-white p-2 text-left transition ${hasIncome ? "hover:bg-[#f4eef9] focus:bg-[#f4eef9]" : "cursor-default"}" ${hasIncome ? "" : "disabled"}>
@@ -692,7 +842,7 @@
               ${day.flights.slice(0, 4).map((flight) => `<span class="flight-chip">${flight.displayNumber}</span>`).join("")}
               ${skippedBadge}
             </span>
-            <span class="calendar-total mt-auto pt-2 font-semibold ${hasIncome ? "text-[#370E62]" : "text-[#8d7aa0]"}">${hasIncome ? formatTHB(day.total) : ""}</span>
+            <span class="calendar-total mt-auto pt-2 font-semibold ${hasIncome ? "text-[#370E62]" : "text-[#8d7aa0]"}">${hasIncome ? formatTHB(calendarAmount) : ""}</span>
           </button>
         `;
       }).join("");
@@ -706,13 +856,15 @@
 
     function updateTotals(schedule) {
       el.allowanceTotal.textContent = formatTHB(schedule?.allowanceTotal || 0);
+      el.nextDayTotal.textContent = formatTHB(schedule?.nextDayPay || 0);
+      el.nextMonthTotal.textContent = formatTHB(schedule?.nextMonthPay || 0);
       el.blockTotal.textContent = formatTHB(schedule?.blockPay || 0);
       el.blockHoursTotal.textContent = `(${formatBlockMinutes(schedule?.blockMinutes || 0)})`;
       el.landingTotal.textContent = formatTHB(schedule?.landingPay || 0);
       el.redEyeTotal.textContent = formatTHB(schedule?.redEyePay || 0);
       el.redEyeCount.textContent = `(${schedule?.redEyeCount || 0})`;
       el.dayBonusTotal.textContent = formatTHB(schedule?.dayBonus || 0);
-      el.dayCount.textContent = `(${schedule?.days.filter((day) => day.flights.length).length || 0})`;
+      el.dayCount.textContent = `(${schedule?.days.filter((day) => day.dayBonus > 0).length || 0})`;
       el.grandTotal.textContent = formatTHB(schedule?.grandTotal || 0);
       el.flightCount.textContent = `(${schedule?.flightCount || 0})`;
       updateProfileSummary();
@@ -723,19 +875,57 @@
       const day = schedule.days.find((item) => item.day === dayNumber);
       if (!day || !day.total) return;
       const titleDate = day.date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+      const transportationCount = day.dayBonus > 0 ? 1 : 0;
+      const landingCount = day.flights.length;
+      const redEyeCount = day.flights.filter((flight) => flight.redEye).length;
       el.modalTitle.textContent = titleDate;
-      el.modalSummary.textContent = `${formatTHB(day.total)} including ${formatTHB(day.dayBonus)} transportation allowance`;
+      el.modalSummary.innerHTML = `<strong class="font-semibold text-[#370E62]">${formatTHB(day.total)} total</strong> (${formatTHB(day.nextDayPay)} next day · ${formatTHB(day.nextMonthPay)} next payslip)`;
       el.modalFlights.innerHTML = `
         <div class="grid gap-3">
+          <section class="rounded-lg border border-[#e5d8ef] bg-white p-3">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="font-semibold text-[#370E62]">Next-day flying income</p>
+                <p class="text-xs text-[#6d5a7f]">Block pay and BKK transportation allowance</p>
+              </div>
+              <p class="shrink-0 font-semibold">${formatTHB(day.nextDayPay)}</p>
+            </div>
+            <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
+              <div class="soft-panel rounded-md p-3">
+                <p class="text-xs text-[#6d5a7f]">Block (${formatBlockMinutes(day.blockMinutes)})</p>
+                <p class="font-medium">${formatTHB(day.blockPay)}</p>
+              </div>
+              <div class="soft-panel rounded-md p-3">
+                <p class="text-xs text-[#6d5a7f]">Transportation (${transportationCount})</p>
+                <p class="font-medium">${formatTHB(day.dayBonus)}</p>
+              </div>
+            </div>
+          </section>
+          <section class="rounded-lg border border-[#e5d8ef] bg-white p-3">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <p class="font-semibold text-[#370E62]">Next-month payslip items</p>
+                <p class="text-xs text-[#6d5a7f]">Landing and red-eye allowances paid with next month's payroll</p>
+              </div>
+              <p class="shrink-0 font-semibold">${formatTHB(day.nextMonthPay)}</p>
+            </div>
+            <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
+              <div class="soft-panel rounded-md p-3">
+                <p class="text-xs text-[#6d5a7f]">Landings (${landingCount})</p>
+                <p class="font-medium">${formatTHB(day.landingPay)}</p>
+              </div>
+              <div class="soft-panel rounded-md p-3">
+                <p class="text-xs text-[#6d5a7f]">Red-eye (${redEyeCount})</p>
+                <p class="font-medium">${formatTHB(day.redEyePay)}</p>
+              </div>
+            </div>
+          </section>
+        </div>
+        <div class="mt-4 grid gap-3">
           ${day.flights.map((flight) => `
             <div class="rounded-lg border border-[#e5d8ef] bg-[#fbf8ff] p-3">
-              <div class="flex items-start justify-between gap-3">
-                <div>
-                  <p class="text-lg font-semibold text-[#190727]">${flight.displayNumber}</p>
-                  <p class="text-sm text-[#6d5a7f]">${flight.depStation} ${flight.depTime} → ${flight.arrStation} ${flight.arrTime}</p>
-                </div>
-                <p class="shrink-0 text-right font-semibold text-[#370E62]">${formatTHB(flight.total)}</p>
-              </div>
+              <p class="text-lg font-semibold text-[#190727]">TG ${flight.displayNumber}</p>
+              <p class="text-sm text-[#6d5a7f]">${flight.depStation} ${flight.depTime} → ${flight.arrStation} ${flight.arrTime}</p>
               <div class="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
                 <div class="rounded-md bg-white p-2">
                   <p class="text-xs text-[#6d5a7f]">Block</p>
@@ -761,7 +951,7 @@
       el.modalSkipped.innerHTML = day.skipped.length
         ? `<div class="rounded-md bg-[#f6f0fa] p-3 text-sm text-[#6d5a7f]">Skipped: ${day.skipped.map((flight) => `${flight.flightNumber} (${flight.reason})`).join(", ")}</div>`
         : "";
-      el.modal.showModal();
+      openAppModal(el.modal);
       refreshIcons();
     }
 
@@ -783,6 +973,10 @@
           }
         }
         renderSchedule();
+        const skipped = state.schedule.days.flatMap((day) => day.skipped.map((flight) => `${day.label}: ${flight.flightNumber} (${flight.reason})`));
+        if (skipped.length) {
+          showError(`Some flights were not counted: ${skipped.join("; ")}`);
+        }
         if (el.settingsModal.open) el.settingsModal.close();
       } catch (error) {
         console.error(error);
@@ -807,8 +1001,9 @@
 
     el.pdf.addEventListener("change", handlePdfChange);
     el.settingsPdf.addEventListener("change", handleSettingsPdfChange);
-    el.role.addEventListener("change", rerenderAfterRateChange);
+    for (const input of el.roleInputs) input.addEventListener("change", rerenderAfterRateChange);
     el.baseSalary.addEventListener("input", rerenderAfterRateChange);
+    for (const input of el.calendarAmountModeInputs) input.addEventListener("change", saveDisplaySettings);
     el.settingsButton.addEventListener("click", openSettings);
     el.setupForm.addEventListener("submit", (event) => {
       event.preventDefault();
@@ -822,6 +1017,9 @@
     el.settingsModal.addEventListener("click", (event) => {
       if (event.target === el.settingsModal) el.settingsModal.close();
     });
+    bindModalScrollLock(el.setupModal);
+    bindModalScrollLock(el.settingsModal);
+    bindModalScrollLock(el.modal);
 
     async function restoreSavedPdf() {
       try {
@@ -836,6 +1034,7 @@
     }
 
     async function initApp() {
+      applyDisplaySettings(getDisplaySettings());
       const savedProfile = getSavedProfile();
       if (savedProfile) {
         applyProfile(savedProfile);
