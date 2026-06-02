@@ -209,6 +209,12 @@
         </section>
       </div>
     </section>
+
+    <footer class="pb-2 text-center text-xs text-[#8a6b9e]">
+      <span>Made with care by bankgg</span>
+      <span aria-hidden="true"> · </span>
+      <span id="appVersionText">v0.0.0</span>
+    </footer>
   </main>
 
   <dialog id="setupModal" class="app-modal">
@@ -323,6 +329,7 @@
       "1750": "Senior Co-pilot",
       "2500": "Captain"
     };
+    const APP_VERSION = "v1.0.0";
     const STORAGE_KEYS = {
       profile: "pilotIncomeProfile",
       pdf: "pilotIncomeSchedulePdf",
@@ -434,6 +441,7 @@
       grandTotal: document.getElementById("grandTotal"),
       earnedTotal: document.getElementById("earnedTotal"),
       flightCount: document.getElementById("flightCount"),
+      appVersionText: document.getElementById("appVersionText"),
       profileSummary: document.getElementById("profileSummary"),
       modal: document.getElementById("dayModal"),
       modalTitle: document.getElementById("modalTitle"),
@@ -449,6 +457,10 @@
 
     function refreshIcons() {
       if (window.lucide) window.lucide.createIcons();
+    }
+
+    function renderAppVersion() {
+      el.appVersionText.textContent = APP_VERSION;
     }
 
     function openAppModal(modal) {
@@ -1545,6 +1557,7 @@
     }
 
     async function initApp() {
+      renderAppVersion();
       applyDisplaySettings(getDisplaySettings());
       const savedProfile = getSavedProfile();
       if (savedProfile) {
