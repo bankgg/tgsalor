@@ -213,7 +213,7 @@
     <footer class="pb-2 text-center text-xs text-[#8a6b9e]">
       <span>Made with care by bankgg</span>
       <span aria-hidden="true"> · </span>
-      <span id="appVersionText">v0.0.0</span>
+      <span id="appVersionText">Version loading</span>
     </footer>
   </main>
 
@@ -275,10 +275,15 @@
         <div class="rounded-lg border border-[#e5d8ef] bg-[#fbf8ff] p-4">
           <p class="text-sm font-medium text-[#2a1638]">Schedule PDF</p>
           <p id="settingsPdfSummary" class="mt-1 text-sm text-[#6d5a7f]">No PDF saved.</p>
-          <label for="settingsPdfInput" class="mt-3 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-[#d8c7e7] bg-white px-4 py-3 text-sm font-semibold text-[#370E62] shadow-sm transition hover:bg-[#f4eef9] active:bg-[#efe3f6]">
-            <i data-lucide="refresh-cw" class="h-4 w-4"></i>
-            <span>Replace PDF</span>
-          </label>
+          <div class="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+            <label for="settingsPdfInput" class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-[#d8c7e7] bg-white px-4 py-3 text-sm font-semibold text-[#370E62] shadow-sm transition hover:bg-[#f4eef9] active:bg-[#efe3f6]">
+              <i data-lucide="refresh-cw" class="h-4 w-4"></i>
+              <span>Replace PDF</span>
+            </label>
+            <button id="deletePdfButton" type="button" class="inline-flex h-12 w-12 cursor-pointer items-center justify-center rounded-lg border border-rose-200 bg-white text-rose-700 shadow-sm transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:border-[#e5d8ef] disabled:text-[#a99bb5] disabled:hover:bg-white" aria-label="Delete saved PDF">
+              <i data-lucide="trash-2" class="h-4 w-4"></i>
+            </button>
+          </div>
           <input id="settingsPdfInput" type="file" accept="application/pdf" class="sr-only">
         </div>
         <fieldset class="grid gap-3 pt-2">
@@ -329,7 +334,7 @@
       "1750": "Senior Co-pilot",
       "2500": "Captain"
     };
-    const APP_VERSION = "v1.0.0";
+    const APP_VERSION = "2026.06.02-r1";
     const STORAGE_KEYS = {
       profile: "pilotIncomeProfile",
       pdf: "pilotIncomeSchedulePdf",
@@ -412,6 +417,7 @@
       baseSalary: document.getElementById("baseSalaryInput"),
       pdf: document.getElementById("pdfInput"),
       settingsPdf: document.getElementById("settingsPdfInput"),
+      deletePdfButton: document.getElementById("deletePdfButton"),
       pdfLabel: document.getElementById("headerPdfLabel"),
       effectiveBadge: document.getElementById("effectiveBadge"),
       effectiveText: document.getElementById("effectiveText"),
@@ -460,7 +466,7 @@
     }
 
     function renderAppVersion() {
-      el.appVersionText.textContent = APP_VERSION;
+      el.appVersionText.textContent = `v${APP_VERSION}`;
     }
 
     function openAppModal(modal) {
@@ -612,6 +618,7 @@
       el.effectiveBadge.classList.toggle("hidden", !hasSavedPdf);
       el.effectiveBadge.classList.toggle("flex", hasSavedPdf);
       el.pdfLabel.hidden = hasSavedPdf;
+      el.deletePdfButton.disabled = !hasSavedPdf;
       const pilotName = state.schedule?.pilotName || "";
       el.pilotNameText.textContent = pilotName;
       el.pilotNameText.classList.toggle("hidden", !pilotName);
@@ -1511,6 +1518,21 @@
       if (parsed) saveSettingsAndClose();
     }
 
+    function deleteSavedPdf() {
+      const hasSchedule = Boolean(state.schedule || state.savedPdfName || localStorage.getItem(STORAGE_KEYS.pdf));
+      if (!hasSchedule) return;
+      if (!window.confirm("Delete the saved schedule PDF and manual flight edits?")) return;
+      localStorage.removeItem(STORAGE_KEYS.pdf);
+      localStorage.removeItem(STORAGE_KEYS.edits);
+      state.schedule = null;
+      state.lastParsedFile = null;
+      state.savedPdfName = "";
+      state.scheduleEdits = null;
+      clearStatus();
+      renderSchedule();
+      updateScheduleHeader();
+    }
+
     async function rerenderAfterRateChange() {
       updateProfileSummary();
       renderSchedule();
@@ -1518,6 +1540,7 @@
 
     el.pdf.addEventListener("change", handlePdfChange);
     el.settingsPdf.addEventListener("change", handleSettingsPdfChange);
+    el.deletePdfButton.addEventListener("click", deleteSavedPdf);
     for (const input of el.roleInputs) input.addEventListener("change", rerenderAfterRateChange);
     el.baseSalary.addEventListener("input", rerenderAfterRateChange);
     for (const input of el.calendarAmountModeInputs) input.addEventListener("change", renderSchedule);
