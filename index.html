@@ -101,9 +101,10 @@
 </head>
 <body class="text-[#190727]">
   <main class="mx-auto flex w-full max-w-5xl flex-col gap-4 px-3 py-4 sm:px-5 sm:py-6">
-    <header class="surface grid gap-3 rounded-lg border px-4 py-3 shadow-sm sm:grid-cols-[1fr_auto] sm:items-center">
+    <header class="surface grid gap-2 rounded-lg border px-4 py-3 shadow-sm sm:grid-cols-[1fr_auto] sm:items-center">
       <div class="min-w-0">
-        <p class="truncate text-sm font-semibold uppercase tracking-wide text-[#370E62]">Thai Airways · Income Planner</p>
+        <p class="truncate text-sm font-semibold uppercase tracking-wide text-[#370E62]">Thai Airways · Pilot Income Planner</p>
+        <p id="pilotNameText" class="mt-1 hidden truncate text-lg font-semibold text-[#190727]"></p>
       </div>
       <div class="grid grid-cols-[1fr_auto] items-center gap-2 sm:flex sm:shrink-0">
         <div id="effectiveBadge" class="hidden h-10 items-center justify-center gap-2 rounded-lg border border-[#d8c7e7] bg-[#f4eef9] px-3 text-[#370E62]">
@@ -112,7 +113,7 @@
         </div>
         <label id="headerPdfLabel" for="pdfInput" class="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#370E62] px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2b0b4d] active:bg-[#2b0b4d]">
           <i data-lucide="upload" class="h-4 w-4"></i>
-          <span>PDF</span>
+          <span>Upload Schedule PDF</span>
         </label>
         <input id="pdfInput" type="file" accept="application/pdf" class="sr-only">
         <button id="settingsButton" type="button" class="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-[#e5d8ef] bg-white px-3 text-[#2a1638] transition hover:bg-[#f6f0fa]" aria-label="Settings">
@@ -407,6 +408,7 @@
       pdfLabel: document.getElementById("headerPdfLabel"),
       effectiveBadge: document.getElementById("effectiveBadge"),
       effectiveText: document.getElementById("effectiveText"),
+      pilotNameText: document.getElementById("pilotNameText"),
       settingsPdfSummary: document.getElementById("settingsPdfSummary"),
       settingsButton: document.getElementById("settingsButton"),
       setupModal: document.getElementById("setupModal"),
@@ -571,6 +573,21 @@
       return `${start}${separator}${end}`;
     }
 
+    function toTitleCaseName(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(" ");
+    }
+
+    function parsePilotName(text) {
+      const match = text.match(/PERS\.NO:\s*\d+\s+\S+\s+(.+?)\s+A\/C\s+QUAL:/i);
+      return match ? toTitleCaseName(match[1]) : "";
+    }
+
     function updateScheduleHeader() {
       const effective = state.schedule ? formatEffectiveRange(state.schedule.range) : "";
       const effectiveHtml = state.schedule ? formatEffectiveRange(state.schedule.range) : "";
@@ -583,6 +600,9 @@
       el.effectiveBadge.classList.toggle("hidden", !hasSavedPdf);
       el.effectiveBadge.classList.toggle("flex", hasSavedPdf);
       el.pdfLabel.hidden = hasSavedPdf;
+      const pilotName = state.schedule?.pilotName || "";
+      el.pilotNameText.textContent = pilotName;
+      el.pilotNameText.classList.toggle("hidden", !pilotName);
     }
 
     function showError(message) {
@@ -893,6 +913,7 @@
         .filter((item) => item.text);
       const fullText = items.map((item) => item.text).join(" ");
       const range = parseEffectiveRange(fullText);
+      const pilotName = parsePilotName(fullText);
       if (!range) throw new Error("The effective date range was not found in the PDF.");
 
       const headers = items
@@ -998,7 +1019,7 @@
         });
       }
 
-      return { range, days, pageCount: pdf.numPages };
+      return { range, pilotName, days, pageCount: pdf.numPages };
     }
 
     function withParsedFlightIds(day) {
