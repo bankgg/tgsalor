@@ -309,6 +309,7 @@
       <p id="modalSummary" class="mt-1 text-sm text-[#6d5a7f]"></p>
       </div>
       <div class="px-4 py-4 sm:px-5">
+      <div id="flightEditorHost" class="mb-4"></div>
       <div id="modalFlights" class="mt-1 -mb-3 overflow-x-auto"></div>
       <div id="modalSkipped" class="mt-4"></div>
       </div>
@@ -324,7 +325,8 @@
     const STORAGE_KEYS = {
       profile: "pilotIncomeProfile",
       pdf: "pilotIncomeSchedulePdf",
-      display: "pilotIncomeDisplaySettings"
+      display: "pilotIncomeDisplaySettings",
+      edits: "pilotIncomeScheduleEdits"
     };
     const LANDING_ALLOWANCE = 650;
     const RED_EYE_ALLOWANCE = 500;
@@ -343,6 +345,47 @@
       TFU: 480, TPE: 480, UBP: 420, UTH: 420, VTE: 420, ZRH: 60,
       BKK: 420, KHH: 480
     };
+    const FLIGHT_DESTINATIONS = {
+      "2": "UTH", "3": "BKK", "4": "UTH", "5": "BKK", "8": "UTH", "9": "BKK",
+      "20": "UBP", "21": "BKK", "28": "UBP", "29": "BKK", "40": "KKC", "41": "BKK",
+      "42": "KKC", "43": "BKK", "44": "KKC", "45": "BKK", "46": "KKC", "47": "BKK",
+      "102": "CNX", "103": "BKK", "104": "CNX", "105": "BKK", "106": "CNX", "107": "BKK",
+      "110": "CNX", "111": "BKK", "112": "CNX", "113": "BKK", "120": "CNX", "121": "BKK",
+      "130": "CEI", "131": "BKK", "132": "CEI", "133": "BKK", "136": "CEI", "137": "BKK",
+      "201": "HKT", "202": "BKK", "203": "HKT", "204": "BKK", "205": "HKT", "206": "BKK",
+      "207": "HKT", "208": "BKK", "211": "HKT", "212": "BKK", "215": "HKT", "216": "BKK",
+      "217": "HKT", "218": "BKK", "221": "HKT", "222": "BKK", "241": "KBV", "242": "BKK",
+      "249": "KBV", "250": "BKK", "259": "HDY", "260": "BKK", "263": "HDY", "264": "BKK",
+      "267": "HDY", "268": "BKK", "301": "RGN", "302": "BKK", "303": "RGN", "304": "BKK",
+      "307": "CMB", "308": "BKK", "309": "KTM", "310": "BKK", "313": "CCU", "314": "BKK",
+      "315": "DEL", "316": "BKK", "317": "BOM", "318": "BKK", "319": "KTM", "320": "BKK",
+      "321": "DAC", "322": "BKK", "323": "DEL", "324": "BKK", "325": "BLR", "326": "BKK",
+      "329": "HYD", "330": "BKK", "331": "DEL", "332": "BKK", "337": "MAA", "338": "BKK",
+      "339": "DAC", "340": "BKK", "341": "KHI", "342": "BKK", "343": "AMD", "344": "BKK",
+      "345": "LHE", "346": "BKK", "349": "ISB", "350": "BKK", "351": "BOM", "352": "BKK",
+      "401": "SIN", "402": "BKK", "403": "SIN", "404": "BKK", "407": "SIN", "408": "BKK",
+      "409": "SIN", "410": "BKK", "413": "SIN", "414": "BKK", "415": "KUL", "416": "BKK",
+      "417": "KUL", "418": "BKK", "425": "PEN", "426": "BKK", "431": "DPS", "432": "BKK",
+      "433": "CGK", "434": "BKK", "435": "CGK", "436": "BKK", "439": "DPS", "440": "BKK",
+      "461": "MEL", "462": "BKK", "465": "MEL", "466": "BKK", "471": "SYD", "472": "BKK",
+      "475": "SYD", "476": "BKK", "483": "PER", "484": "BKK", "550": "SGN", "551": "BKK",
+      "556": "SGN", "557": "BKK", "560": "HAN", "561": "BKK", "564": "HAN", "565": "BKK",
+      "570": "VTE", "571": "BKK", "574": "VTE", "575": "BKK", "584": "KTI", "585": "BKK",
+      "586": "KTI", "587": "BKK", "600": "HKG", "601": "BKK", "602": "HKG", "603": "BKK",
+      "612": "KMG", "613": "BKK", "614": "PEK", "615": "BKK", "618": "TFU", "619": "BKK",
+      "620": "MNL", "621": "BKK", "622": "KIX", "623": "BKK", "624": "MNL", "625": "BKK",
+      "628": "HKG", "629": "BKK", "632": "TPE", "633": "BKK", "634": "TPE", "635": "BKK",
+      "636": "TPE", "637": "BKK", "638": "HKG", "639": "BKK", "642": "NRT", "643": "BKK",
+      "644": "NGO", "645": "BKK", "648": "FUK", "649": "BKK", "652": "ICN", "653": "BKK",
+      "656": "ICN", "657": "BKK", "658": "ICN", "659": "BKK", "660": "HND", "661": "BKK",
+      "662": "PVG", "663": "BKK", "664": "PVG", "665": "BKK", "668": "CAN", "669": "BKK",
+      "670": "CTS", "671": "BKK", "672": "KIX", "673": "BKK", "674": "PEK", "675": "BKK",
+      "676": "NRT", "677": "BKK", "682": "HND", "683": "BKK", "900": "IST", "901": "BKK",
+      "910": "LHR", "911": "BKK", "916": "LHR", "917": "BKK", "920": "FRA", "921": "BKK",
+      "922": "FRA", "923": "BKK", "924": "MUC", "925": "BKK", "930": "CDG", "931": "BKK",
+      "934": "BRU", "935": "BKK", "940": "MXP", "941": "BKK", "950": "CPH", "951": "BKK",
+      "954": "OSL", "955": "BKK", "960": "ARN", "961": "BKK", "970": "ZRH", "971": "BKK"
+    };
     const MONTHS = {
       JAN: 0, FEB: 1, MAR: 2, APR: 3, MAY: 4, JUN: 5,
       JUL: 6, AUG: 7, SEP: 8, OCT: 9, NOV: 10, DEC: 11
@@ -351,7 +394,9 @@
       schedule: null,
       lastParsedFile: null,
       savedPdfName: "",
-      settingsBaseline: null
+      settingsBaseline: null,
+      scheduleEdits: null,
+      activeDayNumber: null
     };
 
     const el = {
@@ -391,6 +436,7 @@
       modal: document.getElementById("dayModal"),
       modalTitle: document.getElementById("modalTitle"),
       modalSummary: document.getElementById("modalSummary"),
+      flightEditorHost: document.getElementById("flightEditorHost"),
       modalFlights: document.getElementById("modalFlights"),
       modalSkipped: document.getElementById("modalSkipped")
     };
@@ -568,6 +614,52 @@
       return new File([bytes], name || "saved-schedule.pdf", { type: mime });
     }
 
+    function getScheduleEditKey(schedule = state.schedule) {
+      if (!schedule?.range) return "";
+      return `${formatEffectiveRange(schedule.range)}|${schedule.pageCount || 1}`;
+    }
+
+    function emptyScheduleEdits(schedule = state.schedule) {
+      return { key: getScheduleEditKey(schedule), days: {} };
+    }
+
+    function loadScheduleEdits(schedule = state.schedule) {
+      const fallback = emptyScheduleEdits(schedule);
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEYS.edits) || "null");
+        return saved?.key === fallback.key && saved.days ? saved : fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    function saveScheduleEdits() {
+      if (!state.scheduleEdits) return;
+      localStorage.setItem(STORAGE_KEYS.edits, JSON.stringify(state.scheduleEdits));
+    }
+
+    function resetScheduleEdits(schedule = state.schedule) {
+      state.scheduleEdits = emptyScheduleEdits(schedule);
+      localStorage.setItem(STORAGE_KEYS.edits, JSON.stringify(state.scheduleEdits));
+    }
+
+    function getDayEditBucket(dayNumber) {
+      if (!state.scheduleEdits) state.scheduleEdits = loadScheduleEdits();
+      const key = String(dayNumber);
+      if (!state.scheduleEdits.days[key]) {
+        state.scheduleEdits.days[key] = { deleted: [], edited: {}, added: [] };
+      }
+      return state.scheduleEdits.days[key];
+    }
+
+    function createParsedFlightId(dayNumber, flight, index) {
+      return `parsed-${dayNumber}-${index}-${flight.flightNumber}-${flight.depStation}-${flight.depTime}-${flight.arrStation}-${flight.arrTime}`;
+    }
+
+    function createManualFlightId() {
+      return `manual-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    }
+
     function openSetup() {
       if (!el.setupModal.contains(el.setupForm)) el.setupModal.querySelector(".app-modal-panel").appendChild(el.setupForm);
       el.setupForm.className = "grid gap-4 px-5 py-5";
@@ -595,7 +687,10 @@
     function timeToMinutes(timeText) {
       const match = String(timeText).match(/^(\d{2}):(\d{2})$/);
       if (!match) return null;
-      return (Number(match[1]) * 60) + Number(match[2]);
+      const hours = Number(match[1]);
+      const minutes = Number(match[2]);
+      if (hours > 23 || minutes > 59) return null;
+      return (hours * 60) + minutes;
     }
 
     function formatBlockMinutes(minutes) {
@@ -636,6 +731,123 @@
       if (dep === null || arr === null) return false;
       if (arr <= dep) arr += 24 * 60;
       return intervalOverlapsWocl(dep, arr);
+    }
+
+    function normalizeStation(value) {
+      return String(value || "").trim().toUpperCase();
+    }
+
+    function normalizeTimeInput(value) {
+      return String(value || "").trim();
+    }
+
+    function formatManualFlightNumber(value) {
+      const trimmed = String(value || "").trim();
+      if (/^\d+$/.test(trimmed)) return String(Number(trimmed));
+      return trimmed.toUpperCase();
+    }
+
+    function formatManualDisplayNumber(value) {
+      return /^\d+$/.test(value) ? value.padStart(3, "0") : value;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function inferRouteForFlightNumber(value) {
+      const flightNumber = normalizeFlightNumber(String(value || "").trim());
+      if (!flightNumber) return null;
+      const destination = FLIGHT_DESTINATIONS[flightNumber];
+      if (!destination) return null;
+      if (destination !== "BKK") return { depStation: "BKK", arrStation: destination };
+      const numeric = Number(flightNumber);
+      const previousDestination = FLIGHT_DESTINATIONS[String(numeric - 1)];
+      const nextDestination = FLIGHT_DESTINATIONS[String(numeric + 1)];
+      const origin = previousDestination && previousDestination !== "BKK"
+        ? previousDestination
+        : (nextDestination && nextDestination !== "BKK" ? nextDestination : "");
+      return origin ? { depStation: origin, arrStation: "BKK" } : null;
+    }
+
+    function findReferenceFlightByNumber(value, excludeId = "") {
+      const flightNumber = formatManualFlightNumber(value);
+      if (!flightNumber) return null;
+      const schedule = currentComputedSchedule();
+      if (!schedule) return null;
+      for (const day of schedule.days) {
+        const match = day.flights.find((flight) => flight.id !== excludeId && String(flight.flightNumber) === flightNumber);
+        if (match) return match;
+      }
+      return null;
+    }
+
+    function applyRoutePrefill(form, force = false) {
+      const route = inferRouteForFlightNumber(form.elements.flightNumber.value);
+      const reference = findReferenceFlightByNumber(form.elements.flightNumber.value, form.dataset.id || "");
+      const dep = form.elements.depStation;
+      const arr = form.elements.arrStation;
+      const depTime = form.elements.depTime;
+      const arrTime = form.elements.arrTime;
+      if (route) {
+        if (force || !dep.value.trim()) dep.value = route.depStation;
+        if (force || !arr.value.trim()) arr.value = route.arrStation;
+      }
+      if (reference) {
+        if (force || !depTime.value.trim()) depTime.value = reference.depTime;
+        if (force || !arrTime.value.trim()) arrTime.value = reference.arrTime;
+      }
+    }
+
+    function buildFlightFromInput(input, options = {}) {
+      const flightNumber = formatManualFlightNumber(input.flightNumber);
+
+      const depStation = normalizeStation(input.depStation);
+      const arrStation = normalizeStation(input.arrStation);
+      const errors = [];
+      if (!/^[A-Z]{3}$/.test(depStation)) {
+        errors.push("Departure station must be a 3-letter station code.");
+      } else if (STATION_TIMEZONES[depStation] === undefined) {
+        errors.push(`Departure station ${depStation} is not in the timezone list.`);
+      }
+      if (!/^[A-Z]{3}$/.test(arrStation)) {
+        errors.push("Arrival station must be a 3-letter station code.");
+      } else if (STATION_TIMEZONES[arrStation] === undefined) {
+        errors.push(`Arrival station ${arrStation} is not in the timezone list.`);
+      }
+
+      const depTime = normalizeTimeInput(input.depTime);
+      const arrTime = normalizeTimeInput(input.arrTime);
+      if (timeToMinutes(depTime) === null) {
+        errors.push("Departure time must use valid HH:MM format.");
+      }
+      if (timeToMinutes(arrTime) === null) {
+        errors.push("Arrival time must use valid HH:MM format.");
+      }
+      if (errors.length) return { error: errors.join(" ") };
+
+      const minutes = calculateBlockMinutes(depTime, arrTime, depStation, arrStation);
+      if (minutes === null || minutes <= 0) return { error: "Block time could not be calculated." };
+
+      return {
+        flight: {
+          id: options.id || createManualFlightId(),
+          source: options.source || "manual",
+          flightNumber,
+          displayNumber: formatManualDisplayNumber(flightNumber),
+          depStation,
+          depTime,
+          arrStation,
+          arrTime,
+          minutes,
+          blockHours: formatBlockMinutes(minutes),
+          redEye: overlapsWocl(depTime, arrTime)
+        }
+      };
     }
 
     function findColumnItem(items, matcher, yMin, yMax) {
@@ -765,7 +977,7 @@
               arrTime: arrTime.text,
               minutes,
               blockHours: formatBlockMinutes(minutes),
-              redEye: overlapsWocl(depTime.text, arrTime.text, depStation.text, arrStation.text)
+              redEye: overlapsWocl(depTime.text, arrTime.text)
             });
           } else {
             skipped.push({
@@ -789,8 +1001,41 @@
       return { range, days, pageCount: pdf.numPages };
     }
 
+    function withParsedFlightIds(day) {
+      return {
+        ...day,
+        flights: day.flights.map((flight, index) => ({
+          ...flight,
+          id: flight.id || createParsedFlightId(day.day, flight, index),
+          source: flight.source || "parsed"
+        }))
+      };
+    }
+
+    function applyManualEditsToDay(day) {
+      const baseDay = withParsedFlightIds(day);
+      const bucket = state.scheduleEdits?.days?.[String(day.day)];
+      if (!bucket) return baseDay;
+      const deleted = new Set(bucket.deleted || []);
+      const edited = bucket.edited || {};
+      const added = bucket.added || [];
+      const flights = baseDay.flights
+        .filter((flight) => !deleted.has(flight.id))
+        .map((flight) => edited[flight.id] ? { ...edited[flight.id], id: flight.id, source: "parsed" } : flight)
+        .concat(added.map((flight) => ({ ...flight, source: "manual" })));
+      return { ...baseDay, flights };
+    }
+
+    function sortFlightsByDeparture(flights) {
+      return [...flights].sort((a, b) => {
+        const aTime = timeToMinutes(a.depTime) ?? 0;
+        const bTime = timeToMinutes(b.depTime) ?? 0;
+        return (aTime - bTime) || String(a.displayNumber).localeCompare(String(b.displayNumber));
+      });
+    }
+
     function computeDay(day, hourlyRate) {
-      const flights = day.flights.map((flight) => {
+      const flights = sortFlightsByDeparture(day.flights).map((flight) => {
         const blockPay = Math.round((hourlyRate / 60) * flight.minutes);
         const redEyePay = flight.redEye ? RED_EYE_ALLOWANCE : 0;
         return {
@@ -827,7 +1072,7 @@
     function currentComputedSchedule() {
       if (!state.schedule) return null;
       const rate = Number(getSelectedRoleRate());
-      const days = state.schedule.days.map((day) => computeDay(day, rate));
+      const days = state.schedule.days.map((day) => computeDay(applyManualEditsToDay(day), rate));
       const blockMinutes = days.reduce((sum, day) => sum + day.flights.reduce((daySum, flight) => daySum + flight.minutes, 0), 0);
       const blockPay = days.reduce((sum, day) => sum + day.blockPay, 0);
       const landingPay = days.reduce((sum, day) => sum + day.landingPay, 0);
@@ -885,7 +1130,14 @@
       const cells = [];
       for (let i = 0; i < firstDayIndex; i += 1) cells.push({ blank: true });
       for (let day = 1; day <= daysInMonth; day += 1) {
-        cells.push(schedule.days.find((item) => item.day === day) || { day, flights: [], skipped: [], total: 0 });
+        cells.push(schedule.days.find((item) => item.day === day) || {
+          day,
+          date: new Date(schedule.range.start.getFullYear(), schedule.range.start.getMonth(), day),
+          flights: [],
+          skipped: [],
+          total: 0,
+          nextDayPay: 0
+        });
       }
       while (cells.length % 7 !== 0) cells.push({ blank: true });
 
@@ -895,7 +1147,7 @@
         const calendarAmount = getCalendarAmountMode() === "all" ? day.total : day.nextDayPay;
         const skippedBadge = day.skipped?.length ? `<span class="badge badge-ghost badge-sm">${day.skipped.length} skipped</span>` : "";
         return `
-          <button type="button" data-day="${day.day}" class="calendar-day flex w-full flex-col bg-white p-2 text-left transition ${hasIncome ? "hover:bg-[#f4eef9] focus:bg-[#f4eef9]" : "cursor-default"}" ${hasIncome ? "" : "disabled"}>
+          <button type="button" data-day="${day.day}" class="calendar-day flex w-full flex-col bg-white p-2 text-left transition hover:bg-[#f4eef9] focus:bg-[#f4eef9]">
             <span class="text-sm font-semibold text-[#2a1638]">${day.day}</span>
             <span class="mt-2 flex flex-wrap gap-1">
               ${day.flights.slice(0, 4).map((flight) => `<span class="flight-chip">${flight.displayNumber}</span>`).join("")}
@@ -930,16 +1182,152 @@
       updateProfileSummary();
     }
 
+    function getFlightFormValues(form) {
+      return {
+        flightNumber: form.elements.flightNumber.value,
+        depStation: form.elements.depStation.value,
+        depTime: form.elements.depTime.value,
+        arrStation: form.elements.arrStation.value,
+        arrTime: form.elements.arrTime.value
+      };
+    }
+
+    function flightEditorMarkup(dayNumber, flight = null, error = "", values = null) {
+      const data = values || flight || {};
+      return `
+        <form class="flight-edit-form rounded-lg border border-[#d8c7e7] bg-white p-3 shadow-sm" data-day="${dayNumber}" data-id="${flight?.id || ""}" data-source="${flight?.source || "manual"}" novalidate>
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="font-semibold text-[#370E62]">${flight ? "Edit flight" : "Add flight"}</p>
+              <p class="text-xs text-[#6d5a7f]">Flight number can prefill the route.</p>
+            </div>
+            <button type="button" data-flight-cancel class="inline-flex h-8 w-8 items-center justify-center rounded-full text-[#6d5a7f] transition hover:bg-[#f6f0fa]" aria-label="Cancel edit">
+              <i data-lucide="x" class="h-4 w-4"></i>
+            </button>
+          </div>
+          ${error ? `<p class="mt-3 rounded-md bg-rose-50 p-2 text-sm text-rose-800">${error}</p>` : ""}
+          <div class="mt-3 grid gap-3">
+            <label class="grid min-w-0 gap-1 text-sm sm:max-w-[12rem]">
+              <span class="text-xs text-[#6d5a7f]">Flight</span>
+              <input name="flightNumber" inputmode="numeric" value="${escapeHtml(data.flightNumber || "")}" class="h-10 min-w-0 rounded-md border border-[#d8c7e7] bg-[#fbf8ff] px-3 outline-none placeholder:text-[#b9a9c8] focus:border-[#370E62] focus:bg-white" placeholder="e.g. 636">
+            </label>
+            <div class="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,0.7fr)] gap-2">
+              <label class="grid min-w-0 gap-1 text-sm">
+                <span class="text-xs text-[#6d5a7f]">Departure station</span>
+                <input name="depStation" value="${escapeHtml(data.depStation || "")}" class="h-10 min-w-0 rounded-md border border-[#d8c7e7] bg-[#fbf8ff] px-3 outline-none placeholder:text-[#b9a9c8] focus:border-[#370E62] focus:bg-white" placeholder="e.g. BKK" maxlength="3">
+              </label>
+              <label class="grid min-w-0 gap-1 text-sm">
+                <span class="text-xs text-[#6d5a7f]">Time</span>
+                <input name="depTime" inputmode="numeric" value="${escapeHtml(data.depTime || "")}" class="h-10 min-w-0 rounded-md border border-[#d8c7e7] bg-[#fbf8ff] px-3 outline-none placeholder:text-[#b9a9c8] focus:border-[#370E62] focus:bg-white" placeholder="e.g. 17:15">
+              </label>
+            </div>
+            <div class="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,0.7fr)] gap-2">
+              <label class="grid min-w-0 gap-1 text-sm">
+                <span class="text-xs text-[#6d5a7f]">Arrival station</span>
+                <input name="arrStation" value="${escapeHtml(data.arrStation || "")}" class="h-10 min-w-0 rounded-md border border-[#d8c7e7] bg-[#fbf8ff] px-3 outline-none placeholder:text-[#b9a9c8] focus:border-[#370E62] focus:bg-white" placeholder="e.g. TPE" maxlength="3">
+              </label>
+              <label class="grid min-w-0 gap-1 text-sm">
+                <span class="text-xs text-[#6d5a7f]">Time</span>
+                <input name="arrTime" inputmode="numeric" value="${escapeHtml(data.arrTime || "")}" class="h-10 min-w-0 rounded-md border border-[#d8c7e7] bg-[#fbf8ff] px-3 outline-none placeholder:text-[#b9a9c8] focus:border-[#370E62] focus:bg-white" placeholder="e.g. 22:10">
+              </label>
+            </div>
+          </div>
+          <button type="submit" class="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#370E62] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2b0b4d] sm:w-auto">
+            <i data-lucide="check" class="h-4 w-4"></i>
+            <span>Save flight</span>
+          </button>
+        </form>
+      `;
+    }
+
+    function bindFlightEditor(form, host) {
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        saveFlightFromForm(form);
+      });
+      form.elements.flightNumber.addEventListener("input", () => applyRoutePrefill(form));
+      form.elements.flightNumber.addEventListener("change", () => applyRoutePrefill(form, true));
+      for (const input of [form.elements.depStation, form.elements.arrStation]) {
+        input.addEventListener("input", () => {
+          input.value = input.value.toUpperCase();
+        });
+      }
+      form.querySelector("[data-flight-cancel]").addEventListener("click", () => {
+        (form.closest("[data-editor-host]") || host)?.replaceChildren();
+      });
+      refreshIcons();
+    }
+
+    function showFlightEditor(dayNumber, flight = null, error = "", values = null, host = el.flightEditorHost) {
+      host.innerHTML = flightEditorMarkup(dayNumber, flight, error, values);
+      bindFlightEditor(host.querySelector(".flight-edit-form"), host);
+    }
+
+    function saveFlightFromForm(form) {
+      const dayNumber = Number(form.dataset.day);
+      const existingId = form.dataset.id || "";
+      const source = form.dataset.source || "manual";
+      const values = getFlightFormValues(form);
+      const result = buildFlightFromInput(values, {
+        id: existingId || createManualFlightId(),
+        source
+      });
+      if (result.error) {
+        const host = existingId
+          ? document.querySelector(`[data-editor-host="${CSS.escape(existingId)}"]`)
+          : el.flightEditorHost;
+        showFlightEditor(dayNumber, existingId ? findFlightById(dayNumber, existingId) : null, result.error, values, host || el.flightEditorHost);
+        return;
+      }
+      const bucket = getDayEditBucket(dayNumber);
+      const flight = result.flight;
+      if (existingId && source === "parsed") {
+        bucket.edited[existingId] = { ...flight, id: existingId, source: "parsed" };
+      } else if (existingId) {
+        bucket.added = bucket.added.map((item) => item.id === existingId ? { ...flight, id: existingId, source: "manual" } : item);
+      } else {
+        bucket.added.push({ ...flight, source: "manual" });
+      }
+      saveScheduleEdits();
+      renderSchedule();
+      openDayModal(dayNumber);
+    }
+
+    function findFlightById(dayNumber, flightId) {
+      const schedule = currentComputedSchedule();
+      const day = schedule?.days.find((item) => item.day === dayNumber);
+      return day?.flights.find((flight) => flight.id === flightId) || null;
+    }
+
+    function deleteFlight(dayNumber, flightId) {
+      const flight = findFlightById(dayNumber, flightId);
+      if (!flight) return;
+      const bucket = getDayEditBucket(dayNumber);
+      if (flight.source === "manual") {
+        bucket.added = bucket.added.filter((item) => item.id !== flightId);
+      } else {
+        if (!bucket.deleted.includes(flightId)) bucket.deleted.push(flightId);
+        delete bucket.edited[flightId];
+      }
+      saveScheduleEdits();
+      renderSchedule();
+      openDayModal(dayNumber);
+    }
+
     function openDayModal(dayNumber) {
       const schedule = currentComputedSchedule();
       const day = schedule.days.find((item) => item.day === dayNumber);
-      if (!day || !day.total) return;
+      if (!day) return;
+      state.activeDayNumber = dayNumber;
       const titleDate = day.date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
       const transportationCount = day.dayBonus > 0 ? 1 : 0;
       const landingCount = day.flights.length;
       const redEyeCount = day.flights.filter((flight) => flight.redEye).length;
       el.modalTitle.textContent = titleDate;
-      el.modalSummary.innerHTML = `<strong class="font-semibold text-[#370E62]">${formatTHB(day.total)} total</strong> (${formatTHB(day.nextDayPay)} next day · ${formatTHB(day.nextMonthPay)} next payslip)`;
+      el.modalSummary.innerHTML = day.total
+        ? `<strong class="font-semibold text-[#370E62]">${formatTHB(day.total)} total</strong> (${formatTHB(day.nextDayPay)} next day · ${formatTHB(day.nextMonthPay)} next payslip)`
+        : "No flights yet";
+      el.flightEditorHost.innerHTML = "";
       el.modalFlights.innerHTML = `
         <div class="grid gap-3">
           <section class="rounded-lg border border-[#e5d8ef] bg-white p-3">
@@ -982,10 +1370,27 @@
           </section>
         </div>
         <div class="mt-4 grid gap-3">
-          ${day.flights.map((flight) => `
+          <button type="button" data-flight-add class="inline-flex items-center justify-center gap-2 rounded-lg border border-[#d8c7e7] bg-white px-4 py-2.5 text-sm font-semibold text-[#370E62] shadow-sm transition hover:bg-[#f4eef9]">
+            <i data-lucide="plus" class="h-4 w-4"></i>
+            <span>Add flight</span>
+          </button>
+          ${day.flights.length ? day.flights.map((flight) => `
             <div class="rounded-lg border border-[#e5d8ef] bg-[#fbf8ff] p-3">
-              <p class="text-lg font-semibold text-[#190727]">TG ${flight.displayNumber}</p>
-              <p class="text-sm text-[#6d5a7f]">${flight.depStation} ${flight.depTime} → ${flight.arrStation} ${flight.arrTime}</p>
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <p class="text-lg font-semibold text-[#190727]">TG ${flight.displayNumber}</p>
+                  <p class="text-sm text-[#6d5a7f]">${flight.depStation} ${flight.depTime} → ${flight.arrStation} ${flight.arrTime}</p>
+                </div>
+                <div class="flex shrink-0 gap-1">
+                  <button type="button" data-flight-edit="${flight.id}" class="inline-flex h-8 w-8 items-center justify-center rounded-full text-[#370E62] transition hover:bg-white" aria-label="Edit TG ${flight.displayNumber}">
+                    <i data-lucide="pencil" class="h-4 w-4"></i>
+                  </button>
+                  <button type="button" data-flight-delete="${flight.id}" class="inline-flex h-8 w-8 items-center justify-center rounded-full text-rose-700 transition hover:bg-white" aria-label="Delete TG ${flight.displayNumber}">
+                    <i data-lucide="trash-2" class="h-4 w-4"></i>
+                  </button>
+                </div>
+              </div>
+              <div data-editor-host="${flight.id}" class="mt-3"></div>
               <div class="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
                 <div class="rounded-md bg-white p-2">
                   <p class="text-xs text-[#6d5a7f]">Block</p>
@@ -1005,13 +1410,25 @@
                 </div>
               </div>
             </div>
-          `).join("")}
+          `).join("") : `<div class="rounded-lg border border-dashed border-[#d8c7e7] bg-[#fbf8ff] p-4 text-sm text-[#6d5a7f]">No flights for this day.</div>`}
         </div>
       `;
       el.modalSkipped.innerHTML = day.skipped.length
         ? `<div class="rounded-md bg-[#f6f0fa] p-3 text-sm text-[#6d5a7f]">Skipped: ${day.skipped.map((flight) => `${flight.flightNumber} (${flight.reason})`).join(", ")}</div>`
         : "";
-      openAppModal(el.modal);
+      el.modalFlights.querySelector("[data-flight-add]").addEventListener("click", () => showFlightEditor(dayNumber));
+      for (const button of el.modalFlights.querySelectorAll("[data-flight-edit]")) {
+        button.addEventListener("click", () => {
+          const host = el.modalFlights.querySelector(`[data-editor-host="${CSS.escape(button.dataset.flightEdit)}"]`);
+          showFlightEditor(dayNumber, findFlightById(dayNumber, button.dataset.flightEdit), "", null, host);
+        });
+      }
+      for (const button of el.modalFlights.querySelectorAll("[data-flight-delete]")) {
+        button.addEventListener("click", () => {
+          if (window.confirm("Delete this flight from the day?")) deleteFlight(dayNumber, button.dataset.flightDelete);
+        });
+      }
+      if (!el.modal.open) openAppModal(el.modal);
       refreshIcons();
     }
 
@@ -1022,6 +1439,11 @@
         state.lastParsedFile = file;
         state.savedPdfName = file.name;
         state.schedule = await extractSchedule(file);
+        if (shouldSave) {
+          resetScheduleEdits(state.schedule);
+        } else {
+          state.scheduleEdits = loadScheduleEdits(state.schedule);
+        }
         if (shouldSave) {
           try {
             localStorage.setItem(STORAGE_KEYS.pdf, JSON.stringify({
