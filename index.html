@@ -65,6 +65,11 @@
       font-weight: 600;
       color: #370E62;
     }
+    .duty-chip-sby {
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: #475569;
+    }
     .calendar-total {
       max-width: 100%;
       line-height: 1.1;
@@ -129,7 +134,7 @@
       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#e5d8ef] px-4 py-3">
         <div>
           <h2 id="monthTitle" class="text-lg font-semibold">Monthly calendar</h2>
-          <p id="calendarSubtitle" class="muted-copy text-sm">Waiting for schedule data</p>
+          <p id="calendarSubtitle" class="muted-copy text-sm"></p>
         </div>
       </div>
       <div class="grid grid-cols-7 border-b border-[#e5d8ef] bg-[#f6f0fa] text-center text-xs font-semibold uppercase text-[#6d5a7f]">
@@ -334,7 +339,7 @@
       "1750": "Senior Co-pilot",
       "2500": "Captain"
     };
-    const APP_VERSION = "2026.06.02-r1";
+    const APP_VERSION = "2026.06.02-r2";
     const STORAGE_KEYS = {
       profile: "pilotIncomeProfile",
       pdf: "pilotIncomeSchedulePdf",
@@ -686,8 +691,10 @@
       if (!state.scheduleEdits) state.scheduleEdits = loadScheduleEdits();
       const key = String(dayNumber);
       if (!state.scheduleEdits.days[key]) {
-        state.scheduleEdits.days[key] = { deleted: [], edited: {}, added: [] };
+        state.scheduleEdits.days[key] = { deleted: [], edited: {}, added: [], deletedDuties: [], addedDuties: [] };
       }
+      if (!state.scheduleEdits.days[key].deletedDuties) state.scheduleEdits.days[key].deletedDuties = [];
+      if (!state.scheduleEdits.days[key].addedDuties) state.scheduleEdits.days[key].addedDuties = [];
       return state.scheduleEdits.days[key];
     }
 
@@ -782,12 +789,12 @@
 
     function formatManualFlightNumber(value) {
       const trimmed = String(value || "").trim();
-      if (/^\d+$/.test(trimmed)) return String(Number(trimmed));
-      return trimmed.toUpperCase();
+      if (!/^\d+$/.test(trimmed)) return "";
+      return String(Number(trimmed));
     }
 
     function formatManualDisplayNumber(value) {
-      return /^\d+$/.test(value) ? value.padStart(3, "0") : value;
+      return value.padStart(3, "0");
     }
 
     function escapeHtml(value) {
@@ -844,10 +851,11 @@
 
     function buildFlightFromInput(input, options = {}) {
       const flightNumber = formatManualFlightNumber(input.flightNumber);
+      const errors = [];
+      if (!flightNumber) errors.push("Flight number must contain numbers only.");
 
       const depStation = normalizeStation(input.depStation);
       const arrStation = normalizeStation(input.arrStation);
-      const errors = [];
       if (!/^[A-Z]{3}$/.test(depStation)) {
         errors.push("Departure station must be a 3-letter station code.");
       } else if (STATION_TIMEZONES[depStation] === undefined) {
@@ -977,6 +985,9 @@
           : [];
         const flights = [];
         const skipped = [];
+        const nonFlightDuties = [...new Set(columnItems
+          .map((item) => item.text.toUpperCase())
+          .filter((text) => NON_FLIGHT_DUTIES.has(text)))];
 
         for (const row of flightRows) {
           const flightItem = findColumnItem(columnItems, (text) => Boolean(normalizeFlightNumber(text)), row.y - 8, row.y + 6);
@@ -1034,6 +1045,7 @@
           label: header.label,
           date: new Date(range.start.getFullYear(), range.start.getMonth(), header.day),
           flights,
+          nonFlightDuties,
           skipped
         });
       }
@@ -1057,13 +1069,18 @@
       const bucket = state.scheduleEdits?.days?.[String(day.day)];
       if (!bucket) return baseDay;
       const deleted = new Set(bucket.deleted || []);
+      const deletedDuties = new Set(bucket.deletedDuties || []);
+      const addedDuties = bucket.addedDuties || [];
       const edited = bucket.edited || {};
       const added = bucket.added || [];
       const flights = baseDay.flights
         .filter((flight) => !deleted.has(flight.id))
         .map((flight) => edited[flight.id] ? { ...edited[flight.id], id: flight.id, source: "parsed" } : flight)
         .concat(added.map((flight) => ({ ...flight, source: "manual" })));
-      return { ...baseDay, flights };
+      const nonFlightDuties = [...new Set((baseDay.nonFlightDuties || [])
+        .filter((duty) => !deletedDuties.has(duty))
+        .concat(addedDuties.filter((duty) => !deletedDuties.has(duty))))];
+      return { ...baseDay, flights, nonFlightDuties };
     }
 
     function sortFlightsByDeparture(flights) {
@@ -1072,6 +1089,10 @@
         const bTime = timeToMinutes(b.depTime) ?? 0;
         return (aTime - bTime) || String(a.displayNumber).localeCompare(String(b.displayNumber));
       });
+    }
+
+    function isWorkingDay(day) {
+      return Boolean(day?.flights?.length || day?.nonFlightDuties?.length);
     }
 
     function computeDay(day, hourlyRate) {
@@ -1121,6 +1142,8 @@
       const dayBonus = days.reduce((sum, day) => sum + day.dayBonus, 0);
       const nextDayPay = days.reduce((sum, day) => sum + day.nextDayPay, 0);
       const nextMonthPay = days.reduce((sum, day) => sum + day.nextMonthPay, 0);
+      const workingDayCount = days.filter(isWorkingDay).length;
+      const dayOffCount = days.length - workingDayCount;
       const allowanceTotal = blockPay + landingPay + redEyePay + dayBonus;
       const baseSalary = Number(el.baseSalary.value || 0);
       const receivedThisMonth = baseSalary + nextDayPay;
@@ -1137,6 +1160,8 @@
         dayBonus,
         nextDayPay,
         nextMonthPay,
+        workingDayCount,
+        dayOffCount,
         allowanceTotal,
         baseSalary,
         grandTotal: receivedThisMonth,
@@ -1156,14 +1181,14 @@
       if (!schedule) {
         renderEmptyCalendar();
         el.monthTitle.textContent = "Monthly calendar";
-        el.calendarSubtitle.textContent = state.savedPdfName ? "Loading saved schedule" : "Upload a schedule PDF";
+        el.calendarSubtitle.textContent = "";
         updateTotals(null);
         return;
       }
 
       const monthName = schedule.range.start.toLocaleString("en-US", { month: "long", year: "numeric" });
       el.monthTitle.textContent = monthName;
-      el.calendarSubtitle.textContent = `${schedule.role} at ${formatTHB(schedule.rate)} per block hour`;
+      el.calendarSubtitle.textContent = `${schedule.workingDayCount} duty days · ${schedule.dayOffCount} days off`;
 
       const firstDayIndex = new Date(schedule.range.start.getFullYear(), schedule.range.start.getMonth(), 1).getDay();
       const daysInMonth = new Date(schedule.range.start.getFullYear(), schedule.range.start.getMonth() + 1, 0).getDate();
@@ -1175,6 +1200,7 @@
           date: new Date(schedule.range.start.getFullYear(), schedule.range.start.getMonth(), day),
           flights: [],
           skipped: [],
+          nonFlightDuties: [],
           total: 0,
           nextDayPay: 0
         });
@@ -1185,12 +1211,17 @@
         if (day.blank) return `<div class="calendar-day bg-[#fbf8ff]"></div>`;
         const hasIncome = day.total > 0;
         const calendarAmount = getCalendarAmountMode() === "all" ? day.total : day.nextDayPay;
+        const dutyChips = (day.nonFlightDuties || [])
+          .filter((duty) => duty === "SBY")
+          .map((duty) => `<span class="flight-chip duty-chip-sby">${duty}</span>`)
+          .join("");
         const skippedBadge = day.skipped?.length ? `<span class="badge badge-ghost badge-sm">${day.skipped.length} skipped</span>` : "";
         return `
           <button type="button" data-day="${day.day}" class="calendar-day flex w-full flex-col bg-white p-2 text-left transition hover:bg-[#f4eef9] focus:bg-[#f4eef9]">
             <span class="text-sm font-semibold text-[#2a1638]">${day.day}</span>
             <span class="mt-2 flex flex-wrap gap-1">
               ${day.flights.slice(0, 4).map((flight) => `<span class="flight-chip">${flight.displayNumber}</span>`).join("")}
+              ${dutyChips}
               ${skippedBadge}
             </span>
             <span class="calendar-total mt-auto pt-2 font-semibold ${hasIncome ? "text-[#370E62]" : "text-[#8d7aa0]"}">${hasIncome ? formatTHB(calendarAmount) : ""}</span>
@@ -1249,12 +1280,12 @@
           <div class="mt-3 grid gap-3">
             <label class="grid min-w-0 gap-1 text-sm sm:max-w-[12rem]">
               <span class="text-xs text-[#6d5a7f]">Flight</span>
-              <input name="flightNumber" inputmode="numeric" value="${escapeHtml(data.flightNumber || "")}" class="h-10 min-w-0 rounded-md border border-[#d8c7e7] bg-[#fbf8ff] px-3 outline-none placeholder:text-[#b9a9c8] focus:border-[#370E62] focus:bg-white" placeholder="e.g. 636">
+              <input name="flightNumber" inputmode="numeric" pattern="[0-9]*" value="${escapeHtml(data.flightNumber || "")}" class="h-10 min-w-0 rounded-md border border-[#d8c7e7] bg-[#fbf8ff] px-3 outline-none placeholder:text-[#b9a9c8] focus:border-[#370E62] focus:bg-white" placeholder="e.g. 636">
             </label>
             <div class="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,0.7fr)] gap-2">
               <label class="grid min-w-0 gap-1 text-sm">
                 <span class="text-xs text-[#6d5a7f]">Departure station</span>
-                <input name="depStation" value="${escapeHtml(data.depStation || "")}" class="h-10 min-w-0 rounded-md border border-[#d8c7e7] bg-[#fbf8ff] px-3 outline-none placeholder:text-[#b9a9c8] focus:border-[#370E62] focus:bg-white" placeholder="e.g. BKK" maxlength="3">
+                <input name="depStation" value="${escapeHtml(data.depStation || "")}" class="h-10 min-w-0 rounded-md border border-[#d8c7e7] bg-[#fbf8ff] px-3 outline-none placeholder:text-[#b9a9c8] focus:border-[#370E62] focus:bg-white" placeholder="e.g. BKK" maxlength="3" pattern="[A-Za-z]{3}">
               </label>
               <label class="grid min-w-0 gap-1 text-sm">
                 <span class="text-xs text-[#6d5a7f]">Time</span>
@@ -1264,7 +1295,7 @@
             <div class="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,0.7fr)] gap-2">
               <label class="grid min-w-0 gap-1 text-sm">
                 <span class="text-xs text-[#6d5a7f]">Arrival station</span>
-                <input name="arrStation" value="${escapeHtml(data.arrStation || "")}" class="h-10 min-w-0 rounded-md border border-[#d8c7e7] bg-[#fbf8ff] px-3 outline-none placeholder:text-[#b9a9c8] focus:border-[#370E62] focus:bg-white" placeholder="e.g. TPE" maxlength="3">
+                <input name="arrStation" value="${escapeHtml(data.arrStation || "")}" class="h-10 min-w-0 rounded-md border border-[#d8c7e7] bg-[#fbf8ff] px-3 outline-none placeholder:text-[#b9a9c8] focus:border-[#370E62] focus:bg-white" placeholder="e.g. TPE" maxlength="3" pattern="[A-Za-z]{3}">
               </label>
               <label class="grid min-w-0 gap-1 text-sm">
                 <span class="text-xs text-[#6d5a7f]">Time</span>
@@ -1285,11 +1316,14 @@
         event.preventDefault();
         saveFlightFromForm(form);
       });
-      form.elements.flightNumber.addEventListener("input", () => applyRoutePrefill(form));
+      form.elements.flightNumber.addEventListener("input", () => {
+        form.elements.flightNumber.value = form.elements.flightNumber.value.replace(/\D/g, "");
+        applyRoutePrefill(form);
+      });
       form.elements.flightNumber.addEventListener("change", () => applyRoutePrefill(form, true));
       for (const input of [form.elements.depStation, form.elements.arrStation]) {
         input.addEventListener("input", () => {
-          input.value = input.value.toUpperCase();
+          input.value = input.value.replace(/[^A-Za-z]/g, "").slice(0, 3).toUpperCase();
         });
       }
       form.querySelector("[data-flight-cancel]").addEventListener("click", () => {
@@ -1327,6 +1361,11 @@
         bucket.added = bucket.added.map((item) => item.id === existingId ? { ...flight, id: existingId, source: "manual" } : item);
       } else {
         bucket.added.push({ ...flight, source: "manual" });
+        bucket.addedDuties = (bucket.addedDuties || []).filter((duty) => duty !== "SBY");
+        const baseDay = state.schedule?.days.find((day) => day.day === dayNumber);
+        if ((baseDay?.nonFlightDuties || []).includes("SBY") && !bucket.deletedDuties.includes("SBY")) {
+          bucket.deletedDuties.push("SBY");
+        }
       }
       saveScheduleEdits();
       renderSchedule();
@@ -1354,6 +1393,44 @@
       openDayModal(dayNumber);
     }
 
+    function deleteDuty(dayNumber, duty) {
+      const bucket = getDayEditBucket(dayNumber);
+      bucket.addedDuties = (bucket.addedDuties || []).filter((item) => item !== duty);
+      const baseDay = state.schedule?.days.find((day) => day.day === dayNumber);
+      const existsInPdf = (baseDay?.nonFlightDuties || []).includes(duty);
+      if (existsInPdf && !bucket.deletedDuties.includes(duty)) bucket.deletedDuties.push(duty);
+      saveScheduleEdits();
+      renderSchedule();
+      openDayModal(dayNumber);
+    }
+
+    function addDuty(dayNumber, duty) {
+      const bucket = getDayEditBucket(dayNumber);
+      bucket.deletedDuties = (bucket.deletedDuties || []).filter((item) => item !== duty);
+      if (!bucket.addedDuties.includes(duty)) bucket.addedDuties.push(duty);
+      saveScheduleEdits();
+      renderSchedule();
+      openDayModal(dayNumber);
+    }
+
+    function replaceDayWithDuty(dayNumber, duty) {
+      const day = currentComputedSchedule()?.days.find((item) => item.day === dayNumber);
+      if (day?.flights?.length && !window.confirm(`Mark this day as ${duty} and delete all flights on this day?`)) return;
+      const bucket = getDayEditBucket(dayNumber);
+      for (const flight of day?.flights || []) {
+        if (flight.source === "manual") {
+          bucket.added = (bucket.added || []).filter((item) => item.id !== flight.id);
+        } else if (!bucket.deleted.includes(flight.id)) {
+          bucket.deleted.push(flight.id);
+        }
+      }
+      bucket.deletedDuties = (bucket.deletedDuties || []).filter((item) => item !== duty);
+      if (!bucket.addedDuties.includes(duty)) bucket.addedDuties.push(duty);
+      saveScheduleEdits();
+      renderSchedule();
+      el.modal.close();
+    }
+
     function openDayModal(dayNumber) {
       const schedule = currentComputedSchedule();
       const day = schedule.days.find((item) => item.day === dayNumber);
@@ -1363,10 +1440,11 @@
       const transportationCount = day.dayBonus > 0 ? 1 : 0;
       const landingCount = day.flights.length;
       const redEyeCount = day.flights.filter((flight) => flight.redEye).length;
+      const sbyDuty = (day.nonFlightDuties || []).includes("SBY");
       el.modalTitle.textContent = titleDate;
       el.modalSummary.innerHTML = day.total
         ? `<strong class="font-semibold text-[#370E62]">${formatTHB(day.total)} total</strong> (${formatTHB(day.nextDayPay)} next day · ${formatTHB(day.nextMonthPay)} next payslip)`
-        : "No flights yet";
+        : (sbyDuty ? "<strong class=\"font-semibold text-[#370E62]\">SBY</strong> · standby duty, no flight income" : "No flights yet");
       el.flightEditorHost.innerHTML = "";
       el.modalFlights.innerHTML = `
         <div class="grid gap-3">
@@ -1410,10 +1488,27 @@
           </section>
         </div>
         <div class="mt-4 grid gap-3">
-          <button type="button" data-flight-add class="inline-flex items-center justify-center gap-2 rounded-lg border border-[#d8c7e7] bg-white px-4 py-2.5 text-sm font-semibold text-[#370E62] shadow-sm transition hover:bg-[#f4eef9]">
-            <i data-lucide="plus" class="h-4 w-4"></i>
-            <span>Add flight</span>
-          </button>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" data-flight-add class="inline-flex items-center justify-center gap-2 rounded-lg border border-[#d8c7e7] bg-white px-4 py-2.5 text-sm font-semibold text-[#370E62] shadow-sm transition hover:bg-[#f4eef9]">
+              <i data-lucide="plus" class="h-4 w-4"></i>
+              <span>Add flight</span>
+            </button>
+            <button type="button" data-duty-add="SBY" class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-100 ${sbyDuty ? "hidden" : ""}">
+              <i data-lucide="clock" class="h-4 w-4"></i>
+              <span>Mark SBY</span>
+            </button>
+          </div>
+          ${sbyDuty ? `
+            <div class="flex items-start justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+              <div>
+                <span class="font-semibold">SBY</span>
+                <span>standby duty is counted as a duty day, but no flight allowances are calculated.</span>
+              </div>
+              <button type="button" data-duty-delete="SBY" class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-rose-700 transition hover:bg-white" aria-label="Remove SBY duty">
+                <i data-lucide="trash-2" class="h-4 w-4"></i>
+              </button>
+            </div>
+          ` : ""}
           ${day.flights.length ? day.flights.map((flight) => `
             <div class="rounded-lg border border-[#e5d8ef] bg-[#fbf8ff] p-3">
               <div class="flex items-start justify-between gap-3">
@@ -1467,6 +1562,14 @@
         button.addEventListener("click", () => {
           if (window.confirm("Delete this flight from the day?")) deleteFlight(dayNumber, button.dataset.flightDelete);
         });
+      }
+      for (const button of el.modalFlights.querySelectorAll("[data-duty-delete]")) {
+        button.addEventListener("click", () => {
+          if (window.confirm(`Remove ${button.dataset.dutyDelete} from this day?`)) deleteDuty(dayNumber, button.dataset.dutyDelete);
+        });
+      }
+      for (const button of el.modalFlights.querySelectorAll("[data-duty-add]")) {
+        button.addEventListener("click", () => replaceDayWithDuty(dayNumber, button.dataset.dutyAdd));
       }
       if (!el.modal.open) openAppModal(el.modal);
       refreshIcons();
