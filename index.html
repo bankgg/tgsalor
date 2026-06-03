@@ -436,7 +436,7 @@
       "1750": "Senior Co-pilot",
       "2500": "Captain"
     };
-    const APP_VERSION = "2026.06.03-r3";
+    const APP_VERSION = "2026.06.03-r4";
     const STORAGE_KEYS = {
       profile: "pilotIncomeProfile",
       pdf: "pilotIncomeSchedulePdf",
@@ -448,17 +448,17 @@
     const FLIGHT_DAY_ALLOWANCE = 1000;
     const NON_FLIGHT_DUTIES = new Set(["TRG", "SBY"]);
     const STATION_TIMEZONES = {
-      AMD: 330, ARN: 60, BLR: 330, BOM: 330, BRU: 60, CAN: 480,
-      CCU: 330, CDG: 60, CEI: 420, CGK: 420, CMB: 330, CNX: 420,
-      CPH: 60, CTS: 540, DAC: 360, DEL: 330, DPS: 480, FRA: 60,
-      FUK: 540, HAN: 420, HDY: 420, HKG: 480, HKT: 420, HND: 540,
-      HYD: 330, ICN: 540, ISB: 300, IST: 180, KBV: 420, KHI: 300,
-      KIX: 540, KKC: 420, KMG: 480, KTI: 420, KTM: 345, KUL: 480,
-      LHE: 300, LHR: 0, MAA: 330, MEL: 600, MNL: 480, MUC: 60,
-      MXP: 60, NGO: 540, NRT: 540, OSL: 60, PEK: 480, PEN: 480,
-      PER: 480, PVG: 480, RGN: 390, SGN: 420, SIN: 480, SYD: 600,
-      TFU: 480, TPE: 480, UBP: 420, UTH: 420, VTE: 420, ZRH: 60,
-      BKK: 420, KHH: 480
+      AMD: "Asia/Kolkata", ARN: "Europe/Stockholm", BLR: "Asia/Kolkata", BOM: "Asia/Kolkata", BRU: "Europe/Brussels", CAN: "Asia/Shanghai",
+      CCU: "Asia/Kolkata", CDG: "Europe/Paris", CEI: "Asia/Bangkok", CGK: "Asia/Jakarta", CMB: "Asia/Colombo", CNX: "Asia/Bangkok",
+      CPH: "Europe/Copenhagen", CTS: "Asia/Tokyo", DAC: "Asia/Dhaka", DEL: "Asia/Kolkata", DPS: "Asia/Makassar", FRA: "Europe/Berlin",
+      FUK: "Asia/Tokyo", HAN: "Asia/Bangkok", HDY: "Asia/Bangkok", HKG: "Asia/Hong_Kong", HKT: "Asia/Bangkok", HND: "Asia/Tokyo",
+      HYD: "Asia/Kolkata", ICN: "Asia/Seoul", ISB: "Asia/Karachi", IST: "Europe/Istanbul", KBV: "Asia/Bangkok", KHI: "Asia/Karachi",
+      KIX: "Asia/Tokyo", KKC: "Asia/Bangkok", KMG: "Asia/Shanghai", KTI: "Asia/Phnom_Penh", KTM: "Asia/Kathmandu", KUL: "Asia/Kuala_Lumpur",
+      LHE: "Asia/Karachi", LHR: "Europe/London", MAA: "Asia/Kolkata", MEL: "Australia/Melbourne", MNL: "Asia/Manila", MUC: "Europe/Berlin",
+      MXP: "Europe/Rome", NGO: "Asia/Tokyo", NRT: "Asia/Tokyo", OSL: "Europe/Oslo", PEK: "Asia/Shanghai", PEN: "Asia/Kuala_Lumpur",
+      PER: "Australia/Perth", PVG: "Asia/Shanghai", RGN: "Asia/Yangon", SGN: "Asia/Ho_Chi_Minh", SIN: "Asia/Singapore", SYD: "Australia/Sydney",
+      TFU: "Asia/Shanghai", TPE: "Asia/Taipei", UBP: "Asia/Bangkok", UTH: "Asia/Bangkok", VTE: "Asia/Vientiane", ZRH: "Europe/Zurich",
+      BKK: "Asia/Bangkok", KHH: "Asia/Taipei"
     };
     const FLIGHT_DESTINATIONS = {
       "2": "UTH", "3": "BKK", "4": "UTH", "5": "BKK", "8": "UTH", "9": "BKK",
@@ -513,6 +513,7 @@
       scheduleEdits: null,
       activeDayNumber: null
     };
+    const timeZoneFormatters = new Map();
     let sharePreview = {
       canvas: null,
       blob: null,
@@ -907,19 +908,68 @@
       return `${hours}:${String(mins).padStart(2, "0")}`;
     }
 
-    function localTimeToUtcTimeline(timeText, station) {
-      const local = timeToMinutes(timeText);
-      const offset = STATION_TIMEZONES[station];
-      if (local === null || offset === undefined) return null;
-      return local - offset;
+    function getStationTimeZone(station) {
+      return STATION_TIMEZONES[station];
     }
 
-    function calculateBlockMinutes(depTime, arrTime, depStation, arrStation) {
-      const dep = localTimeToUtcTimeline(depTime, depStation);
-      let arr = localTimeToUtcTimeline(arrTime, arrStation);
+    function getTimeZoneFormatter(timeZone) {
+      if (!timeZoneFormatters.has(timeZone)) {
+        timeZoneFormatters.set(timeZone, new Intl.DateTimeFormat("en-US", {
+          timeZone,
+          calendar: "gregory",
+          numberingSystem: "latn",
+          hourCycle: "h23",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        }));
+      }
+      return timeZoneFormatters.get(timeZone);
+    }
+
+    function getZonedParts(timestamp, timeZone) {
+      const parts = {};
+      for (const part of getTimeZoneFormatter(timeZone).formatToParts(new Date(timestamp))) {
+        if (part.type !== "literal") parts[part.type] = Number(part.value);
+      }
+      return parts;
+    }
+
+    function addDays(date, days) {
+      return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+    }
+
+    function zonedLocalToUtc(date, timeText, timeZone) {
+      const minutes = timeToMinutes(timeText);
+      if (!(date instanceof Date) || Number.isNaN(date.getTime()) || minutes === null || !timeZone) return null;
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const day = date.getDate();
+      const hour = Math.floor(minutes / 60);
+      const minute = minutes % 60;
+      const targetAsUtc = Date.UTC(year, month, day, hour, minute, 0);
+      let guess = targetAsUtc;
+      for (let i = 0; i < 3; i += 1) {
+        const parts = getZonedParts(guess, timeZone);
+        const zonedAsUtc = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second || 0);
+        const offset = zonedAsUtc - guess;
+        guess = targetAsUtc - offset;
+      }
+      return guess;
+    }
+
+    function calculateBlockMinutesForDate(date, depTime, arrTime, depStation, arrStation) {
+      const depTimeZone = getStationTimeZone(depStation);
+      const arrTimeZone = getStationTimeZone(arrStation);
+      const dep = zonedLocalToUtc(date, depTime, depTimeZone);
+      let arr = zonedLocalToUtc(date, arrTime, arrTimeZone);
       if (dep === null || arr === null) return null;
-      if (arr <= dep) arr += 24 * 60;
-      return arr - dep;
+      if (arr <= dep) arr = zonedLocalToUtc(addDays(date, 1), arrTime, arrTimeZone);
+      if (arr === null || arr <= dep) return null;
+      return Math.round((arr - dep) / 60000);
     }
 
     function intervalOverlapsWocl(start, end) {
@@ -1039,7 +1089,7 @@
       }
       if (errors.length) return { error: errors.join(" ") };
 
-      const minutes = calculateBlockMinutes(depTime, arrTime, depStation, arrStation);
+      const minutes = calculateBlockMinutesForDate(options.date, depTime, arrTime, depStation, arrStation);
       if (minutes === null || minutes <= 0) return { error: "Block time could not be calculated." };
 
       return {
@@ -1137,6 +1187,7 @@
       for (let dayIndex = 0; dayIndex < boundaries.length; dayIndex += 1) {
         const header = boundaries[dayIndex];
         const nextHeader = boundaries[dayIndex + 1];
+        const dayDate = new Date(range.start.getFullYear(), range.start.getMonth(), header.day);
         const columnItems = items
           .filter((item) => item.x >= header.left && item.x < header.right)
           .sort((a, b) => (a.y - b.y) || (a.x - b.x));
@@ -1178,7 +1229,7 @@
             .filter((station) => station && STATION_TIMEZONES[station] === undefined);
           const minutes = missingTimezones.length
             ? null
-            : calculateBlockMinutes(depTime?.text, arrTime?.text, depStation?.text, arrStation?.text);
+            : calculateBlockMinutesForDate(dayDate, depTime?.text, arrTime?.text, depStation?.text, arrStation?.text);
 
           if (depStation && depTime && arrStation && arrTime && minutes !== null) {
             flights.push({
@@ -1205,7 +1256,7 @@
         days.push({
           day: header.day,
           label: header.label,
-          date: new Date(range.start.getFullYear(), range.start.getMonth(), header.day),
+          date: dayDate,
           flights,
           nonFlightDuties,
           skipped
@@ -1259,10 +1310,16 @@
 
     function computeDay(day, hourlyRate) {
       const flights = sortFlightsByDeparture(day.flights).map((flight) => {
-        const blockPay = Math.round((hourlyRate / 60) * flight.minutes);
-        const redEyePay = flight.redEye ? RED_EYE_ALLOWANCE : 0;
+        const recalculatedMinutes = calculateBlockMinutesForDate(day.date, flight.depTime, flight.arrTime, flight.depStation, flight.arrStation);
+        const minutes = recalculatedMinutes ?? (Number.isFinite(Number(flight.minutes)) ? Number(flight.minutes) : 0);
+        const redEye = overlapsWocl(flight.depTime, flight.arrTime);
+        const blockPay = Math.round((hourlyRate / 60) * minutes);
+        const redEyePay = redEye ? RED_EYE_ALLOWANCE : 0;
         return {
           ...flight,
+          minutes,
+          blockHours: formatBlockMinutes(minutes),
+          redEye,
           blockPay,
           landingPay: LANDING_ALLOWANCE,
           redEyePay,
@@ -1692,9 +1749,11 @@
       const existingId = form.dataset.id || "";
       const source = form.dataset.source || "manual";
       const values = getFlightFormValues(form);
+      const baseDay = state.schedule?.days.find((day) => day.day === dayNumber);
       const result = buildFlightFromInput(values, {
         id: existingId || createManualFlightId(),
-        source
+        source,
+        date: baseDay?.date
       });
       if (result.error) {
         const host = existingId
@@ -1712,7 +1771,6 @@
       } else {
         bucket.added.push({ ...flight, source: "manual" });
         bucket.addedDuties = (bucket.addedDuties || []).filter((duty) => duty !== "SBY");
-        const baseDay = state.schedule?.days.find((day) => day.day === dayNumber);
         if ((baseDay?.nonFlightDuties || []).includes("SBY") && !bucket.deletedDuties.includes("SBY")) {
           bucket.deletedDuties.push("SBY");
         }
