@@ -77,6 +77,12 @@
       line-height: 1;
       white-space: nowrap;
     }
+    .share-capture-wide .share-export-main-cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .share-capture-wide .share-export-allowance-sections {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
     .duty-chip-sby {
       border: 1px solid #cbd5e1;
       background: #f8fafc;
@@ -169,7 +175,7 @@
       <div>
         <p class="muted-copy text-sm font-medium">Monthly totals</p>
         <p id="profileSummary" class="muted-copy mt-1 text-sm">Set role and base salary to begin.</p>
-        <div class="mt-3 grid gap-3 sm:grid-cols-2">
+        <div class="share-export-main-cards mt-3 grid gap-3 sm:grid-cols-2">
           <div class="rounded-lg bg-[#370E62] p-4 text-white">
             <p class="text-sm font-medium text-[#e5d8ef]">Receive this month</p>
             <p id="grandTotal" class="mt-1 text-3xl font-semibold">?0</p>
@@ -189,7 +195,7 @@
         </div>
         <p id="allowanceTotal" class="shrink-0 text-xl font-semibold text-[#190727]">?0</p>
       </div>
-      <div class="mt-3 grid gap-3 md:grid-cols-2">
+      <div class="share-export-allowance-sections mt-3 grid gap-3 md:grid-cols-2">
         <section class="rounded-lg border border-[#e5d8ef] bg-white p-3">
           <div class="flex items-start justify-between gap-3">
             <div>
@@ -388,6 +394,23 @@
           </span>
           <input id="shareIncludeIncome" type="checkbox" class="toggle toggle-sm">
         </label>
+        <fieldset class="grid gap-2 rounded-lg border border-[#e5d8ef] bg-[#fbf8ff] px-3 py-3">
+          <legend class="text-sm font-medium text-[#2a1638]">Image size</legend>
+          <label class="flex cursor-pointer gap-3 rounded-md bg-white px-3 py-2">
+            <input type="radio" name="shareImageSize" value="device" class="radio radio-sm mt-0.5" checked>
+            <span>
+              <span class="block text-sm font-medium">Device size</span>
+              <span class="block text-xs text-[#6d5a7f]">Matches the width currently shown on this device.</span>
+            </span>
+          </label>
+          <label class="flex cursor-pointer gap-3 rounded-md bg-white px-3 py-2">
+            <input type="radio" name="shareImageSize" value="normalized" class="radio radio-sm mt-0.5">
+            <span>
+              <span class="block text-sm font-medium">Wide image</span>
+              <span class="block text-xs text-[#6d5a7f]">Uses an iPad-like width for a wider image.</span>
+            </span>
+          </label>
+        </fieldset>
         <div class="rounded-lg border border-[#e5d8ef] bg-[#fbf8ff] p-2">
           <div id="sharePreviewFrame" class="grid min-h-48 place-items-center overflow-auto rounded-md bg-white p-2">
             <p class="text-sm text-[#6d5a7f]">Preview loading...</p>
@@ -413,7 +436,7 @@
       "1750": "Senior Co-pilot",
       "2500": "Captain"
     };
-    const APP_VERSION = "2026.06.03-r2";
+    const APP_VERSION = "2026.06.03-r3";
     const STORAGE_KEYS = {
       profile: "pilotIncomeProfile",
       pdf: "pilotIncomeSchedulePdf",
@@ -524,6 +547,7 @@
       shareCalendarButton: document.getElementById("shareCalendarButton"),
       sharePreviewModal: document.getElementById("sharePreviewModal"),
       shareIncludeIncome: document.getElementById("shareIncludeIncome"),
+      shareImageSizeInputs: Array.from(document.querySelectorAll("input[name='shareImageSize']")),
       sharePreviewFrame: document.getElementById("sharePreviewFrame"),
       shareStatus: document.getElementById("shareStatus"),
       shareSaveButton: document.getElementById("shareSaveButton"),
@@ -610,25 +634,41 @@
 
     function getDisplaySettings() {
       try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEYS.display) || "null") || { calendarAmountMode: "all", calendarFlightLabelMode: "number" };
+        return JSON.parse(localStorage.getItem(STORAGE_KEYS.display) || "null") || {
+          calendarAmountMode: "all",
+          calendarFlightLabelMode: "number",
+          shareImageSize: "device",
+          shareIncludeIncome: false
+        };
       } catch {
-        return { calendarAmountMode: "all", calendarFlightLabelMode: "number" };
+        return {
+          calendarAmountMode: "all",
+          calendarFlightLabelMode: "number",
+          shareImageSize: "device",
+          shareIncludeIncome: false
+        };
       }
     }
 
     function applyDisplaySettings(settings) {
       const mode = settings.calendarAmountMode || "all";
       const labelMode = settings.calendarFlightLabelMode || "number";
+      const shareSize = settings.shareImageSize || "device";
+      el.shareIncludeIncome.checked = Boolean(settings.shareIncludeIncome);
       for (const input of el.calendarAmountModeInputs) input.checked = input.value === mode;
       for (const input of el.calendarFlightLabelModeInputs) input.checked = input.value === labelMode;
+      for (const input of el.shareImageSizeInputs) input.checked = input.value === shareSize;
     }
 
     function saveDisplaySettings() {
       const selected = el.calendarAmountModeInputs.find((input) => input.checked)?.value || "all";
       const labelMode = el.calendarFlightLabelModeInputs.find((input) => input.checked)?.value || "number";
+      const shareSize = getShareImageSizeMode();
       localStorage.setItem(STORAGE_KEYS.display, JSON.stringify({
         calendarAmountMode: selected,
-        calendarFlightLabelMode: labelMode
+        calendarFlightLabelMode: labelMode,
+        shareImageSize: shareSize,
+        shareIncludeIncome: el.shareIncludeIncome.checked
       }));
       renderSchedule();
     }
@@ -641,12 +681,29 @@
       return el.calendarFlightLabelModeInputs.find((input) => input.checked)?.value || "number";
     }
 
+    function getShareImageSizeMode() {
+      return el.shareImageSizeInputs.find((input) => input.checked)?.value || "device";
+    }
+
+    function saveShareImageSizePreference() {
+      const settings = getDisplaySettings();
+      settings.shareImageSize = getShareImageSizeMode();
+      localStorage.setItem(STORAGE_KEYS.display, JSON.stringify(settings));
+    }
+
+    function saveShareIncludeIncomePreference() {
+      const settings = getDisplaySettings();
+      settings.shareIncludeIncome = el.shareIncludeIncome.checked;
+      localStorage.setItem(STORAGE_KEYS.display, JSON.stringify(settings));
+    }
+
     function getSettingsSnapshot() {
       return {
         roleRate: getSelectedRoleRate(),
         baseSalary: String(Math.max(0, Number(el.baseSalary.value || 0))),
         calendarAmountMode: getCalendarAmountMode(),
-        calendarFlightLabelMode: getCalendarFlightLabelMode()
+        calendarFlightLabelMode: getCalendarFlightLabelMode(),
+        shareImageSize: getShareImageSizeMode()
       };
     }
 
@@ -656,7 +713,8 @@
       el.baseSalary.value = snapshot.baseSalary || "";
       applyDisplaySettings({
         calendarAmountMode: snapshot.calendarAmountMode || "all",
-        calendarFlightLabelMode: snapshot.calendarFlightLabelMode || "number"
+        calendarFlightLabelMode: snapshot.calendarFlightLabelMode || "number",
+        shareImageSize: snapshot.shareImageSize || "device"
       });
       updateProfileSummary();
       renderSchedule();
@@ -668,7 +726,8 @@
       return current.roleRate !== state.settingsBaseline.roleRate
         || current.baseSalary !== state.settingsBaseline.baseSalary
         || current.calendarAmountMode !== state.settingsBaseline.calendarAmountMode
-        || current.calendarFlightLabelMode !== state.settingsBaseline.calendarFlightLabelMode;
+        || current.calendarFlightLabelMode !== state.settingsBaseline.calendarFlightLabelMode
+        || current.shareImageSize !== state.settingsBaseline.shareImageSize;
     }
 
     function closeSettingsWithConfirmation() {
@@ -1327,17 +1386,22 @@
     }
 
     function createShareCaptureNode(includeIncome) {
+      const sizeMode = el.shareImageSizeInputs.find((input) => input.checked)?.value || "device";
+      const normalized = sizeMode === "normalized";
+      const exportWidth = normalized
+        ? 820
+        : Math.min(960, Math.max(360, el.calendarSection.offsetWidth || 360));
       const wrapper = document.createElement("div");
       wrapper.style.position = "fixed";
       wrapper.style.left = "-10000px";
       wrapper.style.top = "0";
-      wrapper.style.width = `${Math.min(960, Math.max(360, el.calendarSection.offsetWidth || 360))}px`;
+      wrapper.style.width = `${exportWidth}px`;
       wrapper.style.padding = "16px";
       wrapper.style.background = "#fbf8ff";
       wrapper.style.color = "#190727";
       wrapper.style.display = "grid";
       wrapper.style.gap = "16px";
-      wrapper.className = "share-capture";
+      wrapper.className = normalized ? "share-capture share-capture-wide" : "share-capture";
       const calendarClone = cloneSectionForCapture(el.calendarSection);
       calendarClone.classList.add("bg-white");
       wrapper.appendChild(calendarClone);
@@ -1410,7 +1474,9 @@
     }
 
     async function openSharePreview() {
-      el.shareIncludeIncome.checked = false;
+      el.shareIncludeIncome.checked = Boolean(getDisplaySettings().shareIncludeIncome);
+      const shareSize = getDisplaySettings().shareImageSize || "device";
+      for (const input of el.shareImageSizeInputs) input.checked = input.value === shareSize;
       sharePreview = { canvas: null, blob: null, file: null };
       openAppModal(el.sharePreviewModal);
       refreshIcons();
@@ -1935,7 +2001,14 @@
     el.settingsButton.addEventListener("click", openSettings);
     el.settingsSaveButton.addEventListener("click", saveSettingsAndClose);
     el.shareCalendarButton.addEventListener("click", openSharePreview);
-    el.shareIncludeIncome.addEventListener("change", renderSharePreview);
+    el.shareIncludeIncome.addEventListener("change", () => {
+      saveShareIncludeIncomePreference();
+      renderSharePreview();
+    });
+    for (const input of el.shareImageSizeInputs) input.addEventListener("change", () => {
+      saveShareImageSizePreference();
+      renderSharePreview();
+    });
     el.shareSaveButton.addEventListener("click", saveShareImage);
     el.shareNativeButton.addEventListener("click", nativeShareImage);
     el.setupForm.addEventListener("submit", (event) => {
