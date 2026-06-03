@@ -17,6 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y4YCPHRGS8"></script>
   <script>
@@ -56,14 +57,25 @@
     }
     .flight-chip {
       display: inline-flex;
-      min-width: 2.25rem;
+      align-items: center;
       justify-content: center;
+      box-sizing: border-box;
+      min-width: 2.25rem;
+      min-height: 1.375rem;
       border-radius: 0.375rem;
       background: #efe7f7;
-      padding: 0.125rem 0.25rem;
+      padding: 0.125rem 0.375rem;
+      font-family: Arial, Helvetica, sans-serif;
       font-size: 0.75rem;
       font-weight: 600;
+      line-height: 1;
+      text-align: center;
       color: #370E62;
+    }
+    .flight-chip > span {
+      display: block;
+      line-height: 1;
+      white-space: nowrap;
     }
     .duty-chip-sby {
       border: 1px solid #cbd5e1;
@@ -130,12 +142,16 @@
 
     <section id="statusBox" class="hidden rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 shadow-sm"></section>
 
-    <section class="surface overflow-hidden rounded-lg border shadow-sm">
+    <section id="calendarSection" class="surface overflow-hidden rounded-lg border shadow-sm">
       <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#e5d8ef] px-4 py-3">
         <div>
           <h2 id="monthTitle" class="text-lg font-semibold">Monthly calendar</h2>
           <p id="calendarSubtitle" class="muted-copy text-sm"></p>
         </div>
+        <button id="shareCalendarButton" type="button" class="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-[#e5d8ef] bg-white px-3 text-[#370E62] transition hover:bg-[#f6f0fa] disabled:cursor-not-allowed disabled:text-[#a99bb5] disabled:hover:bg-white" aria-label="Share calendar image">
+          <i data-lucide="share-2" class="h-5 w-5"></i>
+          <span class="hidden text-sm font-medium min-[420px]:inline">Share</span>
+        </button>
       </div>
       <div class="grid grid-cols-7 border-b border-[#e5d8ef] bg-[#f6f0fa] text-center text-xs font-semibold uppercase text-[#6d5a7f]">
         <div class="px-2 py-2">Sun</div>
@@ -149,7 +165,7 @@
       <div id="calendarGrid" class="grid grid-cols-7 bg-[#e5d8ef] gap-px"></div>
     </section>
 
-    <section class="surface rounded-lg border p-4 shadow-sm sm:p-5">
+    <section id="incomeSection" class="surface rounded-lg border p-4 shadow-sm sm:p-5">
       <div>
         <p class="muted-copy text-sm font-medium">Monthly totals</p>
         <p id="profileSummary" class="muted-copy mt-1 text-sm">Set role and base salary to begin.</p>
@@ -215,7 +231,7 @@
       </div>
     </section>
 
-    <footer class="pb-2 text-center text-xs text-[#8a6b9e]">
+    <footer id="creditFooter" class="pb-2 text-center text-xs text-[#8a6b9e]">
       <span>Made with care by bankgg</span>
       <span aria-hidden="true"> · </span>
       <span id="appVersionText">Version loading</span>
@@ -351,13 +367,57 @@
     </div>
   </dialog>
 
+  <dialog id="sharePreviewModal" class="app-modal">
+    <div class="app-modal-panel">
+      <div class="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-[#e5d8ef] bg-white px-4 py-3 sm:px-5">
+        <div>
+          <h2 class="text-lg font-semibold">Share calendar</h2>
+          <p id="shareStatus" class="mt-1 hidden text-sm text-[#6d5a7f]"></p>
+        </div>
+        <form method="dialog">
+          <button class="inline-flex h-9 w-9 items-center justify-center rounded-full text-[#6d5a7f] transition hover:bg-[#f6f0fa]" aria-label="Close share preview">
+            <i data-lucide="x" class="h-4 w-4"></i>
+          </button>
+        </form>
+      </div>
+      <div class="grid gap-4 px-4 py-4 sm:px-5">
+        <label class="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-[#e5d8ef] bg-[#fbf8ff] px-3 py-3">
+          <span>
+            <span class="block text-sm font-medium text-[#2a1638]">Include monthly income</span>
+            <span class="block text-xs text-[#6d5a7f]">Adds the income summary below the calendar image.</span>
+          </span>
+          <input id="shareIncludeIncome" type="checkbox" class="toggle toggle-sm">
+        </label>
+        <div class="rounded-lg border border-[#e5d8ef] bg-[#fbf8ff] p-2">
+          <div id="sharePreviewFrame" class="grid min-h-48 place-items-center overflow-auto rounded-md bg-white p-2">
+            <p class="text-sm text-[#6d5a7f]">Preview loading...</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <button id="shareSaveButton" type="button" class="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-[#d8c7e7] bg-white px-3 text-sm font-semibold text-[#370E62] shadow-sm transition hover:bg-[#f4eef9]">
+            <i data-lucide="download" class="h-4 w-4"></i>
+            <span>Save</span>
+          </button>
+          <button id="shareCopyButton" type="button" class="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-[#d8c7e7] bg-white px-3 text-sm font-semibold text-[#370E62] shadow-sm transition hover:bg-[#f4eef9]">
+            <i data-lucide="copy" class="h-4 w-4"></i>
+            <span>Copy</span>
+          </button>
+          <button id="shareNativeButton" type="button" class="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#370E62] px-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2b0b4d]">
+            <i data-lucide="share-2" class="h-4 w-4"></i>
+            <span>Share</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
   <script>
     const ROLE_RATES = {
       "1250": "Co-pilot",
       "1750": "Senior Co-pilot",
       "2500": "Captain"
     };
-    const APP_VERSION = "2026.06.02-r3";
+    const APP_VERSION = "2026.06.03-r1";
     const STORAGE_KEYS = {
       profile: "pilotIncomeProfile",
       pdf: "pilotIncomeSchedulePdf",
@@ -434,6 +494,11 @@
       scheduleEdits: null,
       activeDayNumber: null
     };
+    let sharePreview = {
+      canvas: null,
+      blob: null,
+      file: null
+    };
 
     const el = {
       roleInputs: Array.from(document.querySelectorAll("input[name='roleRate']")),
@@ -455,9 +520,20 @@
       calendarAmountModeInputs: Array.from(document.querySelectorAll("input[name='calendarAmountMode']")),
       calendarFlightLabelModeInputs: Array.from(document.querySelectorAll("input[name='calendarFlightLabelMode']")),
       status: document.getElementById("statusBox"),
+      calendarSection: document.getElementById("calendarSection"),
+      incomeSection: document.getElementById("incomeSection"),
       monthTitle: document.getElementById("monthTitle"),
       calendarSubtitle: document.getElementById("calendarSubtitle"),
       calendarGrid: document.getElementById("calendarGrid"),
+      shareCalendarButton: document.getElementById("shareCalendarButton"),
+      sharePreviewModal: document.getElementById("sharePreviewModal"),
+      shareIncludeIncome: document.getElementById("shareIncludeIncome"),
+      sharePreviewFrame: document.getElementById("sharePreviewFrame"),
+      shareStatus: document.getElementById("shareStatus"),
+      shareSaveButton: document.getElementById("shareSaveButton"),
+      shareCopyButton: document.getElementById("shareCopyButton"),
+      shareNativeButton: document.getElementById("shareNativeButton"),
+      creditFooter: document.getElementById("creditFooter"),
       allowanceTotal: document.getElementById("allowanceTotal"),
       blockTotal: document.getElementById("blockTotal"),
       blockHoursTotal: document.getElementById("blockHoursTotal"),
@@ -1214,15 +1290,203 @@
         : flight.displayNumber;
     }
 
+    function setShareStatus(message = "", tone = "muted") {
+      el.shareStatus.textContent = message;
+      el.shareStatus.classList.toggle("hidden", !message);
+      el.shareStatus.classList.toggle("text-rose-700", tone === "error");
+      el.shareStatus.classList.toggle("text-[#6d5a7f]", tone !== "error");
+    }
+
+    function getShareFilename() {
+      const schedule = currentComputedSchedule();
+      if (!schedule) return "tg-income-calendar.png";
+      const year = schedule.range.start.getFullYear();
+      const month = String(schedule.range.start.getMonth() + 1).padStart(2, "0");
+      return `tg-income-calendar-${year}-${month}.png`;
+    }
+
+    function cloneSectionForCapture(section) {
+      const clone = section.cloneNode(true);
+      clone.querySelectorAll("button[data-day]").forEach((button) => {
+        const dayCell = document.createElement("div");
+        dayCell.innerHTML = button.innerHTML;
+        dayCell.className = button.className
+          .replace(/\bhover:[^\s]+/g, "")
+          .replace(/\bfocus:[^\s]+/g, "")
+          .replace(/\btransition\b/g, "")
+          .replace(/\btext-left\b/g, "");
+        dayCell.classList.add("text-left");
+        button.replaceWith(dayCell);
+      });
+      clone.querySelectorAll("button, input, .sr-only").forEach((node) => node.remove());
+      clone.querySelectorAll(".flight-chip > span").forEach((label) => {
+        label.style.position = "relative";
+        label.style.top = "-6px";
+      });
+      clone.querySelectorAll("[id]").forEach((node) => node.removeAttribute("id"));
+      clone.querySelectorAll("[data-day]").forEach((node) => {
+        node.removeAttribute("data-day");
+        node.removeAttribute("type");
+      });
+      return clone;
+    }
+
+    function createShareCaptureNode(includeIncome) {
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "fixed";
+      wrapper.style.left = "-10000px";
+      wrapper.style.top = "0";
+      wrapper.style.width = `${Math.min(960, Math.max(360, el.calendarSection.offsetWidth || 360))}px`;
+      wrapper.style.padding = "16px";
+      wrapper.style.background = "#fbf8ff";
+      wrapper.style.color = "#190727";
+      wrapper.style.display = "grid";
+      wrapper.style.gap = "16px";
+      wrapper.className = "share-capture";
+      const calendarClone = cloneSectionForCapture(el.calendarSection);
+      calendarClone.classList.add("bg-white");
+      wrapper.appendChild(calendarClone);
+      if (includeIncome) {
+        const incomeClone = cloneSectionForCapture(el.incomeSection);
+        incomeClone.classList.add("bg-white");
+        wrapper.appendChild(incomeClone);
+      }
+      const footerClone = el.creditFooter.cloneNode(true);
+      footerClone.removeAttribute("id");
+      footerClone.classList.add("pt-1");
+      wrapper.appendChild(footerClone);
+      document.body.appendChild(wrapper);
+      return wrapper;
+    }
+
+    function canvasToBlob(canvas) {
+      return new Promise((resolve) => canvas.toBlob(resolve, "image/png", 0.96));
+    }
+
+    function setShareActionsDisabled(disabled) {
+      for (const button of [el.shareSaveButton, el.shareCopyButton, el.shareNativeButton]) {
+        button.disabled = disabled;
+        button.classList.toggle("opacity-60", disabled);
+        button.classList.toggle("cursor-not-allowed", disabled);
+        button.classList.toggle("cursor-pointer", !disabled);
+      }
+    }
+
+    async function renderSharePreview() {
+      if (!currentComputedSchedule()) {
+        setShareStatus("Upload a schedule first.", "error");
+        return;
+      }
+      if (!window.html2canvas) {
+        setShareStatus("Image capture is still loading. Try again in a moment.", "error");
+        return;
+      }
+      setShareActionsDisabled(true);
+      setShareStatus("Preparing image...");
+      el.sharePreviewFrame.innerHTML = `<p class="text-sm text-[#6d5a7f]">Preview loading...</p>`;
+      const captureNode = createShareCaptureNode(el.shareIncludeIncome.checked);
+      try {
+        const canvas = await window.html2canvas(captureNode, {
+          backgroundColor: "#fbf8ff",
+          scale: 2,
+          useCORS: true,
+          logging: false
+        });
+        const blob = await canvasToBlob(canvas);
+        if (!blob) throw new Error("Could not create the image file.");
+        const file = new File([blob], getShareFilename(), { type: "image/png" });
+        const previewUrl = URL.createObjectURL(blob);
+        el.sharePreviewFrame.innerHTML = "";
+        const image = document.createElement("img");
+        image.src = previewUrl;
+        image.alt = "Calendar image preview";
+        image.className = "max-h-[60vh] w-full rounded-md object-contain shadow-sm";
+        image.addEventListener("load", () => URL.revokeObjectURL(previewUrl), { once: true });
+        el.sharePreviewFrame.appendChild(image);
+        sharePreview = { canvas, blob, file };
+        setShareStatus("");
+      } catch (error) {
+        console.error(error);
+        setShareStatus("Could not prepare the image. Please try again.", "error");
+      } finally {
+        captureNode.remove();
+        setShareActionsDisabled(false);
+      }
+    }
+
+    async function openSharePreview() {
+      el.shareIncludeIncome.checked = false;
+      sharePreview = { canvas: null, blob: null, file: null };
+      openAppModal(el.sharePreviewModal);
+      refreshIcons();
+      await renderSharePreview();
+    }
+
+    async function ensureSharePreviewFile() {
+      if (!sharePreview.file) await renderSharePreview();
+      if (!sharePreview.file) throw new Error("Image is not ready yet.");
+      return sharePreview.file;
+    }
+
+    async function saveShareImage() {
+      try {
+        const file = await ensureSharePreviewFile();
+        const url = URL.createObjectURL(file);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = file.name;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        setShareStatus("Image saved.");
+      } catch (error) {
+        setShareStatus(error.message || "Save failed.", "error");
+      }
+    }
+
+    async function copyShareImage() {
+      try {
+        const file = await ensureSharePreviewFile();
+        if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") {
+          throw new Error("Copying images is not supported in this browser.");
+        }
+        await navigator.clipboard.write([new ClipboardItem({ [file.type]: file })]);
+        setShareStatus("Image copied.");
+      } catch (error) {
+        setShareStatus(error.message || "Copy failed.", "error");
+      }
+    }
+
+    async function nativeShareImage() {
+      try {
+        const file = await ensureSharePreviewFile();
+        if (!navigator.canShare || !navigator.share || !navigator.canShare({ files: [file] })) {
+          throw new Error("Sharing images is not supported here. Use Save or Copy instead.");
+        }
+        await navigator.share({
+          files: [file],
+          title: "TG income calendar",
+          text: "TG income calendar"
+        });
+        setShareStatus("");
+      } catch (error) {
+        if (error.name === "AbortError") return;
+        setShareStatus(error.message || "Share failed.", "error");
+      }
+    }
+
     function renderSchedule() {
       const schedule = currentComputedSchedule();
       if (!schedule) {
         renderEmptyCalendar();
         el.monthTitle.textContent = "Monthly calendar";
         el.calendarSubtitle.textContent = "";
+        el.shareCalendarButton.disabled = true;
         updateTotals(null);
         return;
       }
+      el.shareCalendarButton.disabled = false;
 
       const monthName = schedule.range.start.toLocaleString("en-US", { month: "long", year: "numeric" });
       el.monthTitle.textContent = monthName;
@@ -1251,14 +1515,14 @@
         const calendarAmount = getCalendarAmountMode() === "all" ? day.total : day.nextDayPay;
         const dutyChips = (day.nonFlightDuties || [])
           .filter((duty) => duty === "SBY")
-          .map((duty) => `<span class="flight-chip duty-chip-sby">${duty}</span>`)
+          .map((duty) => `<span class="flight-chip duty-chip-sby"><span>${duty}</span></span>`)
           .join("");
         const skippedBadge = day.skipped?.length ? `<span class="badge badge-ghost badge-sm">${day.skipped.length} skipped</span>` : "";
         return `
           <button type="button" data-day="${day.day}" class="calendar-day flex w-full flex-col bg-white p-2 text-left transition hover:bg-[#f4eef9] focus:bg-[#f4eef9]">
             <span class="text-sm font-semibold text-[#2a1638]">${day.day}</span>
             <span class="mt-2 flex flex-wrap gap-1">
-              ${day.flights.slice(0, 4).map((flight) => `<span class="flight-chip">${escapeHtml(getCalendarFlightLabel(flight))}</span>`).join("")}
+              ${day.flights.slice(0, 4).map((flight) => `<span class="flight-chip"><span>${escapeHtml(getCalendarFlightLabel(flight))}</span></span>`).join("")}
               ${dutyChips}
               ${skippedBadge}
             </span>
@@ -1688,6 +1952,11 @@
     for (const input of el.calendarFlightLabelModeInputs) input.addEventListener("change", renderSchedule);
     el.settingsButton.addEventListener("click", openSettings);
     el.settingsSaveButton.addEventListener("click", saveSettingsAndClose);
+    el.shareCalendarButton.addEventListener("click", openSharePreview);
+    el.shareIncludeIncome.addEventListener("change", renderSharePreview);
+    el.shareSaveButton.addEventListener("click", saveShareImage);
+    el.shareCopyButton.addEventListener("click", copyShareImage);
+    el.shareNativeButton.addEventListener("click", nativeShareImage);
     el.setupForm.addEventListener("submit", (event) => {
       event.preventDefault();
       if (el.settingsModal.open) {
