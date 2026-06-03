@@ -1446,15 +1446,26 @@
     }
 
     async function copyShareImage() {
+      setShareStatus("Copying image...");
+      setShareActionsDisabled(true);
       try {
         const file = await ensureSharePreviewFile();
-        if (!navigator.clipboard?.write || typeof ClipboardItem === "undefined") {
-          throw new Error("Copying images is not supported in this browser.");
+        if (!navigator.clipboard?.write || typeof window.ClipboardItem === "undefined") {
+          throw new Error("This browser cannot copy images. Use Share or Save instead.");
         }
-        await navigator.clipboard.write([new ClipboardItem({ [file.type]: file })]);
+        if (window.ClipboardItem.supports && !window.ClipboardItem.supports("image/png")) {
+          throw new Error("This browser cannot copy PNG images. Use Share or Save instead.");
+        }
+        const clipboardItem = new window.ClipboardItem({ "image/png": sharePreview.blob || file });
+        await Promise.race([
+          navigator.clipboard.write([clipboardItem]),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("Copy did not finish. Use Share or Save instead.")), 4000))
+        ]);
         setShareStatus("Image copied.");
       } catch (error) {
         setShareStatus(error.message || "Copy failed.", "error");
+      } finally {
+        setShareActionsDisabled(false);
       }
     }
 
