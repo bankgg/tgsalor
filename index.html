@@ -393,14 +393,10 @@
             <p class="text-sm text-[#6d5a7f]">Preview loading...</p>
           </div>
         </div>
-        <div class="grid grid-cols-3 gap-2">
+        <div class="grid grid-cols-2 gap-2">
           <button id="shareSaveButton" type="button" class="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-[#d8c7e7] bg-white px-3 text-sm font-semibold text-[#370E62] shadow-sm transition hover:bg-[#f4eef9]">
             <i data-lucide="download" class="h-4 w-4"></i>
             <span>Save</span>
-          </button>
-          <button id="shareCopyButton" type="button" class="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-[#d8c7e7] bg-white px-3 text-sm font-semibold text-[#370E62] shadow-sm transition hover:bg-[#f4eef9]">
-            <i data-lucide="copy" class="h-4 w-4"></i>
-            <span>Copy</span>
           </button>
           <button id="shareNativeButton" type="button" class="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#370E62] px-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#2b0b4d]">
             <i data-lucide="share-2" class="h-4 w-4"></i>
@@ -417,7 +413,7 @@
       "1750": "Senior Co-pilot",
       "2500": "Captain"
     };
-    const APP_VERSION = "2026.06.03-r1";
+    const APP_VERSION = "2026.06.03-r2";
     const STORAGE_KEYS = {
       profile: "pilotIncomeProfile",
       pdf: "pilotIncomeSchedulePdf",
@@ -531,7 +527,6 @@
       sharePreviewFrame: document.getElementById("sharePreviewFrame"),
       shareStatus: document.getElementById("shareStatus"),
       shareSaveButton: document.getElementById("shareSaveButton"),
-      shareCopyButton: document.getElementById("shareCopyButton"),
       shareNativeButton: document.getElementById("shareNativeButton"),
       creditFooter: document.getElementById("creditFooter"),
       allowanceTotal: document.getElementById("allowanceTotal"),
@@ -1364,7 +1359,7 @@
     }
 
     function setShareActionsDisabled(disabled) {
-      for (const button of [el.shareSaveButton, el.shareCopyButton, el.shareNativeButton]) {
+      for (const button of [el.shareSaveButton, el.shareNativeButton]) {
         button.disabled = disabled;
         button.classList.toggle("opacity-60", disabled);
         button.classList.toggle("cursor-not-allowed", disabled);
@@ -1445,35 +1440,11 @@
       }
     }
 
-    async function copyShareImage() {
-      setShareStatus("Copying image...");
-      setShareActionsDisabled(true);
-      try {
-        const file = await ensureSharePreviewFile();
-        if (!navigator.clipboard?.write || typeof window.ClipboardItem === "undefined") {
-          throw new Error("This browser cannot copy images. Use Share or Save instead.");
-        }
-        if (window.ClipboardItem.supports && !window.ClipboardItem.supports("image/png")) {
-          throw new Error("This browser cannot copy PNG images. Use Share or Save instead.");
-        }
-        const clipboardItem = new window.ClipboardItem({ "image/png": sharePreview.blob || file });
-        await Promise.race([
-          navigator.clipboard.write([clipboardItem]),
-          new Promise((_, reject) => setTimeout(() => reject(new Error("Copy did not finish. Use Share or Save instead.")), 4000))
-        ]);
-        setShareStatus("Image copied.");
-      } catch (error) {
-        setShareStatus(error.message || "Copy failed.", "error");
-      } finally {
-        setShareActionsDisabled(false);
-      }
-    }
-
     async function nativeShareImage() {
       try {
         const file = await ensureSharePreviewFile();
         if (!navigator.canShare || !navigator.share || !navigator.canShare({ files: [file] })) {
-          throw new Error("Sharing images is not supported here. Use Save or Copy instead.");
+          throw new Error("Sharing images is not supported here. Use Save instead.");
         }
         await navigator.share({
           files: [file],
@@ -1966,7 +1937,6 @@
     el.shareCalendarButton.addEventListener("click", openSharePreview);
     el.shareIncludeIncome.addEventListener("change", renderSharePreview);
     el.shareSaveButton.addEventListener("click", saveShareImage);
-    el.shareCopyButton.addEventListener("click", copyShareImage);
     el.shareNativeButton.addEventListener("click", nativeShareImage);
     el.setupForm.addEventListener("submit", (event) => {
       event.preventDefault();
