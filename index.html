@@ -50,6 +50,9 @@
     .calendar-day {
       min-height: 7.5rem;
     }
+    .calendar-day-today {
+      background: #fff6dc;
+    }
     @media (max-width: 640px) {
       .calendar-day {
         min-height: 8.25rem;
@@ -253,29 +256,7 @@
       <form id="setupForm" class="grid gap-4 px-5 py-5">
         <fieldset class="grid gap-2">
           <legend class="mb-2 text-sm font-medium">Role</legend>
-          <div class="grid gap-2">
-            <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-[#d8c7e7] bg-white p-3 transition hover:border-[#c49add]">
-              <input type="radio" name="roleRate" value="1250" class="radio radio-sm mt-1" checked>
-              <span>
-                <span class="block font-medium">Co-pilot</span>
-                <span class="block text-sm text-[#6d5a7f]">฿1,250 per block hour</span>
-              </span>
-            </label>
-            <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-[#d8c7e7] bg-white p-3 transition hover:border-[#c49add]">
-              <input type="radio" name="roleRate" value="1750" class="radio radio-sm mt-1">
-              <span>
-                <span class="block font-medium">Senior Co-pilot</span>
-                <span class="block text-sm text-[#6d5a7f]">฿1,750 per block hour</span>
-              </span>
-            </label>
-            <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-[#d8c7e7] bg-white p-3 transition hover:border-[#c49add]">
-              <input type="radio" name="roleRate" value="2500" class="radio radio-sm mt-1">
-              <span>
-                <span class="block font-medium">Captain</span>
-                <span class="block text-sm text-[#6d5a7f]">฿2,500 per block hour</span>
-              </span>
-            </label>
-          </div>
+          <div id="roleOptions" class="grid gap-2"></div>
         </fieldset>
         <label class="grid gap-2">
           <span class="text-sm font-medium">Base salary</span>
@@ -431,12 +412,14 @@
   </dialog>
 
   <script>
-    const ROLE_RATES = {
-      "1250": "Co-pilot",
-      "1750": "Senior Co-pilot",
-      "2500": "Captain"
-    };
-    const APP_VERSION = "2026.06.03-r4";
+    const ROLE_OPTIONS = [
+      { rate: "1250", label: "Co-pilot", enabled: true },
+      { rate: "1750", label: "Senior Co-pilot", enabled: false },
+      { rate: "2500", label: "Captain", enabled: false }
+    ];
+    const ROLE_RATES = Object.fromEntries(ROLE_OPTIONS.map((role) => [role.rate, role.label]));
+    const DEFAULT_ROLE_RATE = ROLE_OPTIONS.find((role) => role.enabled)?.rate || "1250";
+    const APP_VERSION = "2026.06.19-r1";
     const STORAGE_KEYS = {
       profile: "pilotIncomeProfile",
       pdf: "pilotIncomeSchedulePdf",
@@ -521,6 +504,7 @@
     };
 
     const el = {
+      roleOptions: document.getElementById("roleOptions"),
       roleInputs: Array.from(document.querySelectorAll("input[name='roleRate']")),
       baseSalary: document.getElementById("baseSalaryInput"),
       pdf: document.getElementById("pdfInput"),
@@ -605,6 +589,24 @@
       }
     }
 
+    function getEnabledRoleOptions() {
+      return ROLE_OPTIONS.filter((role) => role.enabled);
+    }
+
+    function renderRoleOptions() {
+      const enabledRoles = getEnabledRoleOptions();
+      el.roleOptions.innerHTML = enabledRoles.map((role, index) => `
+        <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-[#d8c7e7] bg-white p-3 transition hover:border-[#c49add]">
+          <input type="radio" name="roleRate" value="${escapeHtml(role.rate)}" class="radio radio-sm mt-1"${index === 0 ? " checked" : ""}>
+          <span>
+            <span class="block font-medium">${escapeHtml(role.label)}</span>
+            <span class="block text-sm text-[#6d5a7f]">${formatTHB(Number(role.rate))} per block hour</span>
+          </span>
+        </label>
+      `).join("");
+      el.roleInputs = Array.from(el.roleOptions.querySelectorAll("input[name='roleRate']"));
+    }
+
     function saveProfile() {
       const profile = {
         roleRate: getSelectedRoleRate(),
@@ -625,11 +627,12 @@
     }
 
     function getSelectedRoleRate() {
-      return el.roleInputs.find((input) => input.checked)?.value || "1250";
+      return el.roleInputs.find((input) => input.checked)?.value || DEFAULT_ROLE_RATE;
     }
 
     function setSelectedRoleRate(roleRate) {
-      const safeRate = ROLE_RATES[roleRate] ? roleRate : "1250";
+      const enabledRates = new Set(getEnabledRoleOptions().map((role) => role.rate));
+      const safeRate = enabledRates.has(roleRate) ? roleRate : DEFAULT_ROLE_RATE;
       for (const input of el.roleInputs) input.checked = input.value === safeRate;
     }
 
@@ -1395,6 +1398,14 @@
       )).join("");
     }
 
+    function isCurrentCalendarDay(date) {
+      const today = new Date();
+      return date instanceof Date
+        && date.getFullYear() === today.getFullYear()
+        && date.getMonth() === today.getMonth()
+        && date.getDate() === today.getDate();
+    }
+
     function getCalendarFlightLabel(flight) {
       return getCalendarFlightLabelMode() === "arrival"
         ? (flight.arrStation || flight.displayNumber)
@@ -1617,6 +1628,7 @@
       el.calendarGrid.innerHTML = cells.map((day) => {
         if (day.blank) return `<div class="calendar-day bg-[#fbf8ff]"></div>`;
         const hasIncome = day.total > 0;
+        const isToday = isCurrentCalendarDay(day.date);
         const calendarAmount = getCalendarAmountMode() === "all" ? day.total : day.nextDayPay;
         const dutyChips = (day.nonFlightDuties || [])
           .filter((duty) => duty === "SBY")
@@ -1624,8 +1636,8 @@
           .join("");
         const skippedBadge = day.skipped?.length ? `<span class="badge badge-ghost badge-sm">${day.skipped.length} skipped</span>` : "";
         return `
-          <button type="button" data-day="${day.day}" class="calendar-day flex w-full flex-col bg-white p-2 text-left transition hover:bg-[#f4eef9] focus:bg-[#f4eef9]">
-            <span class="text-sm font-semibold text-[#2a1638]">${day.day}</span>
+          <button type="button" data-day="${day.day}" class="calendar-day ${isToday ? "calendar-day-today" : "bg-white"} flex w-full flex-col p-2 text-left transition hover:bg-[#f4eef9] focus:bg-[#f4eef9]"${isToday ? ' aria-current="date"' : ""}>
+            <span class="calendar-day-number text-sm font-semibold text-[#2a1638]">${day.day}</span>
             <span class="mt-2 flex flex-wrap gap-1">
               ${day.flights.slice(0, 4).map((flight) => `<span class="flight-chip"><span>${escapeHtml(getCalendarFlightLabel(flight))}</span></span>`).join("")}
               ${dutyChips}
@@ -2048,6 +2060,8 @@
       updateProfileSummary();
       renderSchedule();
     }
+
+    renderRoleOptions();
 
     el.pdf.addEventListener("change", handlePdfChange);
     el.settingsPdf.addEventListener("change", handleSettingsPdfChange);
