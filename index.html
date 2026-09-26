@@ -1640,11 +1640,12 @@
         background: #f7f3fb;
       }
       .share-options .choice {
-        align-items: center;
+        align-items: flex-start;
       }
       .share-options input[type="checkbox"] {
         width: 16px;
         height: 16px;
+        margin-top: 2px;
       }
       .option-title {
         font-size: 0.875rem;
@@ -2194,18 +2195,17 @@
       </div>
       <div class="modal-body">
         <div class="share-options">
-          <label class="choice"
-            ><input id="shareIncludeIncome" type="checkbox" /><span
-              ><strong class="option-title"
-                >Include monthly income</strong
-              ></span
-            ></label
-          >
+          <label class="choice">
+            <input id="shareIncludeIncome" type="checkbox" />
+            <span>
+              <strong class="option-title">Include monthly income</strong>
+              <small id="sharePrivacyNote" hidden
+                >Income is hidden on the page. Including monthly income adds
+                those amounts to this image only.</small
+              >
+            </span>
+          </label>
         </div>
-        <p id="sharePrivacyNote" class="small muted" hidden>
-          Income is hidden on the page. Including monthly income adds those
-          amounts to this image only.
-        </p>
         <p
           id="shareStatus"
           class="small muted"
@@ -2234,7 +2234,7 @@
       );
       const DEFAULT_ROLE_RATE =
         ROLE_OPTIONS.find((role) => role.enabled)?.rate || "1250";
-      const APP_VERSION = "2026.09.27-r23";
+      const APP_VERSION = "2026.09.27-r24";
       const STORAGE_KEYS = {
         profile: "pilotIncomeProfile",
         pdf: "pilotIncomeSchedulePdf",

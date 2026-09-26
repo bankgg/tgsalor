@@ -1,5 +1,5 @@
 /* Static app cache. All URLs resolve within the GitHub Pages project directory. */
-const VERSION = "2026.09.27-r23";
+const VERSION = "2026.09.27-r24";
 const PREFIX = "tg-pilot-planner:" + self.registration.scope + ":";
 const CACHE = PREFIX + VERSION;
 const assetURL = (path) => new URL(path, self.registration.scope).href;
