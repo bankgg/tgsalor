@@ -1623,7 +1623,8 @@
         font-size: 0.875rem;
         margin-bottom: 8px;
       }
-      .calendar-amount-options .choice {
+      .calendar-amount-options .choice,
+      .share-options .choice {
         align-items: flex-start;
         gap: 10px;
         padding: 12px;
@@ -1633,9 +1634,17 @@
       .calendar-amount-options .choice input {
         margin-top: 2px;
       }
-      .calendar-amount-options .choice:has(input:checked) {
+      .calendar-amount-options .choice:has(input:checked),
+      .share-options .choice:has(input:checked) {
         border-color: #b49acb;
         background: #f7f3fb;
+      }
+      .share-options .choice {
+        align-items: center;
+      }
+      .share-options input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
       }
       .option-title {
         font-size: 0.875rem;
@@ -2186,8 +2195,11 @@
       <div class="modal-body">
         <div class="share-options">
           <label class="choice"
-            ><input id="shareIncludeIncome" type="checkbox" />Include monthly
-            income</label
+            ><input id="shareIncludeIncome" type="checkbox" /><span
+              ><strong class="option-title"
+                >Include monthly income</strong
+              ></span
+            ></label
           >
         </div>
         <p id="sharePrivacyNote" class="small muted" hidden>
@@ -2222,7 +2234,7 @@
       );
       const DEFAULT_ROLE_RATE =
         ROLE_OPTIONS.find((role) => role.enabled)?.rate || "1250";
-      const APP_VERSION = "2026.09.27-r22";
+      const APP_VERSION = "2026.09.27-r23";
       const STORAGE_KEYS = {
         profile: "pilotIncomeProfile",
         pdf: "pilotIncomeSchedulePdf",
