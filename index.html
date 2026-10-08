@@ -81,7 +81,8 @@
       button:focus-visible,
       a:focus-visible,
       input:focus-visible,
-      summary:focus-visible {
+      summary:focus-visible,
+      .calendar-scroll:focus-visible {
         outline: 3px solid var(--magenta);
         outline-offset: 3px;
       }
@@ -599,17 +600,17 @@
       }
       .flight-heading .flight-tools {
         display: flex;
-        gap: 0;
+        gap: 4px;
       }
       .flight-heading .flight-tools .button {
-        width: 28px;
-        height: 28px;
-        min-height: 28px;
+        width: 44px;
+        height: 44px;
+        min-height: 44px;
         padding: 0;
       }
       .flight-heading .flight-tools svg {
-        width: 14px;
-        height: 14px;
+        width: 18px;
+        height: 18px;
       }
       .flight-heading h3 {
         margin-right: 4px;
@@ -1307,9 +1308,6 @@
       .button-label {
         display: none;
       }
-      .welcome .eyebrow {
-        font-size: 0.6875rem;
-      }
       .calendar-summary {
         padding: 10px 14px 13px;
         display: flex;
@@ -1528,13 +1526,7 @@
       .app .calendar-summary {
         gap: 4px 8px;
         min-height: 44px;
-        padding: 0 12px;
-      }
-      .calendar-summary .calendar-time-caption {
-        max-width: 100%;
-        font-size: 0.625rem;
-        color: var(--muted);
-        line-height: 1.4;
+        padding: 2px 12px;
       }
       #dayDetailsModal .section-head {
         padding: 8px 12px;
@@ -1707,23 +1699,11 @@
         padding: 1px 0;
         line-height: 1.2;
       }
-      @media (max-width: 767px) {
-        .app .flight-chip {
-          font-size: clamp(0.5625rem, 2.5vw, 0.6875rem);
-        }
-      }
-      @media (min-width: 768px) and (max-width: 1023px) {
-        .app .flight-chip {
-          font-size: 0.625rem;
-        }
-      }
       .share-capture .flight-labels {
         grid-template-columns: minmax(0, 1fr);
       }
       .app .flight-chip:not(.duty-chip),
       .share-capture .flight-chip:not(.duty-chip) {
-        display: grid;
-        grid-template-columns: minmax(0, 4ch) minmax(0, 3ch);
         column-gap: 0.2ch;
         width: max-content;
         font-family: PilotFlightLabel, ui-monospace, monospace;
@@ -1732,6 +1712,18 @@
         padding-left: 0;
         padding-right: 0;
         text-align: left;
+      }
+      .app .flight-chip:not(.duty-chip) {
+        display: flex;
+        flex-wrap: wrap;
+      }
+      .app .flight-number,
+      .app .flight-arrival {
+        white-space: nowrap;
+      }
+      .share-capture .flight-chip:not(.duty-chip) {
+        display: grid;
+        grid-template-columns: minmax(0, 4ch) minmax(0, 3ch);
       }
       .flight-number {
         color: var(--purple);
@@ -1788,15 +1780,18 @@
       .calendar-day:has(.calendar-flight-times) .calendar-total {
         margin-top: 0;
       }
-      @media (max-width: 389px) {
-        .app .calendar-time-row {
-          font-size: 0.5rem;
-        }
+      .app .calendar-time-row {
+        flex-wrap: wrap;
+        gap: 2px;
+        font-family: inherit;
+        font-size: 0.75rem;
       }
-      @media (min-width: 1024px) {
-        .app .calendar-time-row {
-          font-size: 0.625rem;
-        }
+      .app .calendar-time-row time {
+        white-space: nowrap;
+      }
+      .app .calendar-time-row .arrival-offset {
+        font-size: inherit;
+        margin-left: 0;
       }
       .share-capture .calendar-time-row {
         font-size: 11px;
@@ -1806,6 +1801,92 @@
       .share-capture .calendar-time-row svg {
         width: 10px;
         height: 10px;
+      }
+      .calendar-scroll {
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scrollbar-color: var(--purple) var(--purple-soft);
+      }
+      .calendar-scroll .weekdays,
+      .calendar-scroll .month-grid {
+        min-width: 21rem;
+      }
+      @media (min-width: 1000px) {
+        .calendar-scroll .weekdays,
+        .calendar-scroll .month-grid {
+          min-width: 31.5rem;
+        }
+      }
+      .calendar-scroll:focus-visible {
+        outline-offset: -3px;
+      }
+      .calendar-scroll-hint {
+        margin: 0;
+        font-size: 0.75rem;
+        color: var(--muted);
+      }
+      .calendar-summary-copy {
+        display: grid;
+        gap: 2px;
+        max-width: 100%;
+      }
+      .calendar-summary .calendar-time-caption,
+      .calendar-summary .calendar-amount-caption,
+      .calendar-summary a {
+        font-size: 0.75rem;
+        line-height: 1.4;
+      }
+      .calendar-time-caption,
+      .calendar-amount-caption {
+        color: var(--muted);
+      }
+      .welcome .format-cue {
+        margin: 12px auto 0;
+        font-size: 0.875rem;
+      }
+      .welcome-help {
+        max-width: 360px;
+        margin: 20px auto 0;
+        border-top: 1px solid var(--line);
+        text-align: left;
+      }
+      .welcome-help summary {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 44px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--purple);
+        list-style: none;
+      }
+      .welcome-help summary::-webkit-details-marker {
+        display: none;
+      }
+      .welcome-help summary svg {
+        width: 18px;
+        height: 18px;
+        flex: none;
+      }
+      .welcome-help[open] summary svg {
+        transform: rotate(90deg);
+      }
+      .welcome-help p {
+        margin: 0 0 12px;
+        font-size: 0.875rem;
+      }
+      @media print {
+        .calendar-scroll {
+          overflow: visible;
+        }
+        .calendar-scroll .weekdays,
+        .calendar-scroll .month-grid {
+          min-width: 0;
+        }
+        .calendar-scroll-hint {
+          display: none;
+        }
       }
       .calendar-flag {
         position: absolute;
@@ -1909,9 +1990,6 @@
         <div class="welcome-mark">
           <svg data-icon="calendar" aria-hidden="true"></svg>
         </div>
-        <p class="eyebrow" style="margin: 0 auto 10px; color: var(--purple)">
-          THAI crew schedule
-        </p>
         <h2 id="welcomeTitle">Your month, at a glance.</h2>
         <p>
           See your flights and estimated income together. Start with your
@@ -1920,10 +1998,28 @@
         <button id="welcomeUploadButton" type="button" class="button primary">
           <svg data-icon="upload" aria-hidden="true"></svg>Choose schedule PDF
         </button>
+        <p class="format-cue">For the current THAI monthly crew schedule PDF.</p>
         <p class="small">
           Your schedule stays on this device.<br />Set your salary in Settings
           whenever you’re ready.
         </p>
+        <details class="welcome-help">
+          <summary>
+            <svg data-icon="right" aria-hidden="true"></svg>PDF &amp; offline help
+          </summary>
+          <p>
+            Import one month in the current THAI layout. Only page 1 is read;
+            scanned PDFs, other roster formats, and multi-month schedules aren’t supported.
+          </p>
+          <p>
+            Open the app online once and wait for <strong>Offline ready</strong>
+            before relying on it offline.
+          </p>
+          <p>
+            Your saved schedule and corrections stay in this browser.
+            Clearing this site’s browser data removes them.
+          </p>
+        </details>
       </section>
       <div id="loadedContent" hidden>
         <div class="workspace">
@@ -1936,27 +2032,42 @@
             <div class="calendar-meta">
               <p id="calendarSubtitle"></p>
               <p id="effectiveText" class="schedule-name"></p>
-            </div>
-            <div class="weekdays" aria-hidden="true">
-              <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span
-              ><span>Thu</span><span>Fri</span><span>Sat</span>
+              <p id="calendarScrollHint" class="calendar-scroll-hint" hidden>
+                Swipe or scroll for dates.
+              </p>
             </div>
             <div
-              id="calendarGrid"
-              class="month-grid"
-              role="group"
-              aria-label="Schedule dates"
-              aria-describedby="calendarAmountLegend"
-            ></div>
+              id="calendarScroll"
+              class="calendar-scroll"
+              role="region"
+              aria-label="Monthly calendar"
+              aria-describedby="calendarScrollHint"
+            >
+              <div class="weekdays" aria-hidden="true">
+                <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span
+                ><span>Thu</span><span>Fri</span><span>Sat</span>
+              </div>
+              <div
+                id="calendarGrid"
+                class="month-grid"
+                role="group"
+                aria-label="Schedule dates"
+                aria-describedby="calendarAmountLegend"
+              ></div>
+            </div>
             <div class="calendar-summary">
-              <span
-                class="calendar-time-caption"
-                title="First departure and last arrival in airport local times"
-                >Local time · ↑ depart ↓ arrive</span
-              >
-              <span id="calendarAmountLegend" class="sr-only income-sensitive"
-                >Daily income · all allowances</span
-              >
+              <div class="calendar-summary-copy">
+                <span
+                  class="calendar-time-caption"
+                  title="First departure and last arrival in airport local times"
+                  >Local time · ↑ depart ↓ arrive</span
+                >
+                <span
+                  id="calendarAmountLegend"
+                  class="calendar-amount-caption income-sensitive"
+                  >Daily estimate · all allowances</span
+                >
+              </div>
               <a
                 href="#incomeSection"
                 class="income-sensitive"
@@ -2234,7 +2345,7 @@
       );
       const DEFAULT_ROLE_RATE =
         ROLE_OPTIONS.find((role) => role.enabled)?.rate || "1250";
-      const APP_VERSION = "2026.09.27-r24";
+      const APP_VERSION = "2026.10.08-r26";
       const STORAGE_KEYS = {
         profile: "pilotIncomeProfile",
         pdf: "pilotIncomeSchedulePdf",
@@ -4184,6 +4295,13 @@
         $("selectionAnnouncement").textContent = "";
         renderSchedule();
       }
+      function updateCalendarOverflow() {
+        const scroller = $("calendarScroll");
+        const overflow = scroller.scrollWidth > scroller.clientWidth + 1;
+        $("calendarScrollHint").hidden = !overflow;
+        if (overflow) scroller.setAttribute("tabindex", "0");
+        else scroller.removeAttribute("tabindex");
+      }
       function renderSchedule() {
         applyIncomePrivacy();
         const schedule = currentComputedSchedule();
@@ -4230,11 +4348,12 @@
           " days off";
         $("calendarAmountLegend").textContent =
           state.display.calendarAmountMode === "all"
-            ? "Daily income · all allowances"
-            : "Daily income · block & transport";
+            ? "Daily estimate · all allowances"
+            : "Daily estimate · next-day pay";
         if (state.display.hideIncome)
           $("calendarAmountLegend").textContent = "";
         el.calendarGrid.innerHTML = calendarMarkup(schedule);
+        updateCalendarOverflow();
         renderDayPanel(schedule);
         setBusy(state.busy);
       }
@@ -5431,6 +5550,12 @@
       }
 
       function bindEvents() {
+        if (window.ResizeObserver) {
+          const calendarObserver = new ResizeObserver(updateCalendarOverflow);
+          calendarObserver.observe($("calendarScroll"));
+          calendarObserver.observe(el.calendarGrid);
+        }
+        window.addEventListener("resize", updateCalendarOverflow);
         $("incomePrivacyButton").addEventListener("click", toggleIncomePrivacy);
         $("dayIncomePrivacyButton").addEventListener(
           "click",

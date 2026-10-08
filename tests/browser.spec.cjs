@@ -38,11 +38,15 @@ async function addFlight(page, day = 30) {
   await closeDayDetails(page);
 }
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({
+  page,
+}) => {
   page.pageErrors = [];
   page.on("pageerror", (error) => page.pageErrors.push(error.message));
 });
-test.afterEach(async ({ page }) => {
+test.afterEach(async ({
+  page,
+}) => {
   expect(page.pageErrors).toEqual([]);
 });
 
@@ -62,7 +66,101 @@ test("first visit is usable without profile setup or eagerly loading PDF/export 
   ).toBe(false);
   await expect(page.locator("#offlineStatus")).toHaveText("Offline ready");
   await expect(page.locator("#updateButton")).not.toBeVisible();
+  await expect(page.locator(".format-cue")).toContainText("THAI monthly");
+  await expect(page.locator(".welcome-help p").first()).not.toBeVisible();
+  await page.getByText("PDF & offline help", { exact: true }).click();
+  await expect(page.locator(".welcome-help")).toContainText("Only page 1 is read");
+  await expect(page.locator(".welcome-help")).toContainText("scanned PDFs");
+  await expect(page.locator(".welcome-help")).toContainText("multi-month");
+  await expect(page.locator(".welcome-help")).toContainText("Offline ready");
+  await expect(page.locator(".welcome-help")).toContainText(
+    "Clearing this site’s browser data removes them",
+  );
+  await page.getByText("PDF & offline help", { exact: true }).click();
   expect(external).toEqual([]);
+});
+
+test("enlarged calendar text stays readable and keyboard navigation reveals offscreen dates", async ({
+  page,
+}) => {
+  await ready(page);
+  await upload(page, { fourFlights: true });
+  await page.evaluate(() => document.fonts.ready);
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.evaluate(() => {
+      document.documentElement.style.fontSize = "32px";
+    });
+    await expect
+      .poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+      .toBe(true);
+    const readability = await page.locator("#calendarGrid").evaluate((grid) => {
+      const tokens = [
+        ...grid.querySelectorAll(
+          ".flight-number, .flight-arrival, .calendar-time-row time, .arrival-offset",
+        ),
+      ];
+      return tokens.every((token) => {
+        const range = document.createRange();
+        range.selectNodeContents(token);
+        const textRects = [...range.getClientRects()];
+        const cell = token.closest(".calendar-day").getBoundingClientRect();
+        return (
+          parseFloat(getComputedStyle(token).fontSize) >= 24 &&
+          textRects.length === 1 &&
+          textRects.every((rect) =>
+            rect.left >= cell.left && rect.right <= cell.right &&
+            rect.top >= cell.top && rect.bottom <= cell.bottom,
+          )
+        );
+      });
+    });
+    expect(readability).toBe(true);
+    expect(
+      await page.locator(".calendar-total:visible").evaluateAll((nodes) =>
+        nodes.every((node) => node.scrollWidth <= node.clientWidth),
+      ),
+    ).toBe(true);
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator("#calendarScrollHint")).toBeVisible();
+  await page.locator('button[data-day="1"]').focus();
+  for (let i = 0; i < 5; i++) await page.keyboard.press("ArrowRight");
+  await expect(page.locator('button[data-day="6"]')).toBeFocused();
+  expect(
+    await page.locator("#calendarScroll").evaluate((node) => node.scrollLeft),
+  ).toBeGreaterThan(0);
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = "";
+  });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(page.locator("#calendarScrollHint")).not.toBeVisible();
+  await expect(page.locator("#calendarScroll")).not.toHaveAttribute("tabindex", "0");
+});
+
+test("phone flight correction controls have separated 44px targets", async ({
+  page,
+}) => {
+  await ready(page);
+  await upload(page);
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.locator('button[data-day="1"]').click();
+    const tools = page.locator("#dayContent .flight-tools").first();
+    const edit = await tools.locator("[data-flight-edit]").boundingBox();
+    const remove = await tools.locator("[data-flight-delete]").boundingBox();
+    expect(edit.width).toBeGreaterThanOrEqual(44);
+    expect(edit.height).toBeGreaterThanOrEqual(44);
+    expect(remove.width).toBeGreaterThanOrEqual(44);
+    expect(remove.height).toBeGreaterThanOrEqual(44);
+    expect(remove.x - edit.x - edit.width).toBeGreaterThanOrEqual(4);
+    await tools.locator("[data-flight-edit]").click();
+    await expect(page.locator("#dayModal")).toBeVisible();
+    await page.locator("#dayModal")
+      .getByRole("button", { name: "Cancel", exact: true })
+      .click();
+    await closeDayDetails(page);
+  }
 });
 
 for (const failure of ["missing", "mime", "syntax"]) {
@@ -513,6 +611,7 @@ test("mobile, iPad, desktop, and enlarged text reflow without horizontal overflo
   await upload(page);
   for (const [width, height] of [
     [320, 568],
+    [375, 812],
     [390, 844],
     [430, 932],
     [768, 1024],
@@ -527,6 +626,19 @@ test("mobile, iPad, desktop, and enlarged text reflow without horizontal overflo
         ),
       )
       .toBe(true);
+    if (width >= 375 && width < 768) {
+      await expect(page.locator("#calendarScrollHint")).not.toBeVisible();
+      expect(
+        await page.locator("#calendarScroll").evaluate((scroller) => {
+          const bounds = scroller.getBoundingClientRect();
+          return scroller.scrollWidth <= scroller.clientWidth &&
+            [...scroller.querySelectorAll(".weekdays span")].every((day) => {
+              const rect = day.getBoundingClientRect();
+              return rect.left >= bounds.left && rect.right <= bounds.right;
+            });
+        }),
+      ).toBe(true);
+    }
     expect(
       await page
         .locator(".calendar-total:visible")
@@ -630,7 +742,8 @@ test("calendar with flight times fits typical phone screens and allows scrolling
               .locator("#calendarSection")
               .evaluate((calendar) => calendar.getBoundingClientRect().bottom),
           )
-          .toBeLessThanOrEqual(height);
+          // Allow subpixel rounding at the bottom border.
+          .toBeLessThanOrEqual(height + 1);
       }
       expect(
         await page.evaluate(
@@ -731,15 +844,15 @@ test("daily flight ranges show local times, overnight markers, and update after 
       endBelowFlights:
         end.getBoundingClientRect().top >=
         flights[flights.length - 1].getBoundingClientRect().bottom,
-      smallerTimes:
-        parseFloat(getComputedStyle(start).fontSize) <
-        parseFloat(getComputedStyle(flights[0]).fontSize),
+      readableTimes:
+        parseFloat(getComputedStyle(start).fontSize) >= 12 &&
+        parseFloat(getComputedStyle(cell.querySelector(".arrival-offset")).fontSize) >= 12,
     };
   });
   expect(hierarchy).toEqual({
     startAboveFlights: true,
     endBelowFlights: true,
-    smallerTimes: true,
+    readableTimes: true,
   });
 
   for (const number of [2, 3, 4])
@@ -1055,19 +1168,30 @@ test("settings have clean option cards and flights show number plus destination 
     .getByRole("button", { name: "Save settings", exact: true })
     .click();
   await expect(page.locator("#calendarAmountLegend")).toHaveText(
-    "Daily income · block & transport",
+    "Daily estimate · next-day pay",
   );
+  await expect(page.locator("#calendarAmountLegend")).toBeVisible();
+  await expect(page.locator(".income-caption")).toContainText(
+    "all flight allowances",
+  );
+  await page.reload();
+  await page.evaluate(() => window.pilotIncomeReady);
+  await expect(page.locator("#calendarAmountLegend")).toHaveText(
+    "Daily estimate · next-day pay",
+  );
+  await expect(page.locator("#calendarAmountLegend")).toBeVisible();
   for (const width of [320, 390, 768]) {
     await page.setViewportSize({ width, height: 844 });
     const chips = page.locator('button[data-day="1"] .flight-chip');
     await page.evaluate(() => document.fonts.ready);
     expect(
-      await chips.evaluateAll((nodes) =>
-        nodes.every(
-          (node) =>
-            node.getBoundingClientRect().height <=
-            parseFloat(getComputedStyle(node).lineHeight) + 2.1,
-        ),
+      await chips.locator(".flight-number, .flight-arrival").evaluateAll((nodes) =>
+        nodes.every((node) => {
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          return range.getClientRects().length === 1 &&
+            node.scrollWidth <= node.clientWidth;
+        }),
       ),
     ).toBe(true);
     expect(
@@ -1114,6 +1238,7 @@ test("income privacy persists and covers the calendar, dialogs, settings, and ex
   await expect(page.locator("#incomeSection")).not.toBeVisible();
   await expect(page.locator(".calendar-total:visible")).toHaveCount(0);
   await expect(page.locator("#calendarAmountLegend")).toHaveText("");
+  await expect(page.locator("#calendarAmountLegend")).not.toBeVisible();
   expect(await page.locator("body").innerText()).not.toContain("฿");
   expect(
     await page.locator('button[data-day="1"]').getAttribute("aria-label"),
@@ -1163,7 +1288,7 @@ test("income privacy persists and covers the calendar, dialogs, settings, and ex
   await expect(page.locator("#earnedTotal")).toBeVisible();
   await expect(page.locator("#earnedTotal")).toHaveText("฿13,425");
   await expect(page.locator("#calendarAmountLegend")).toHaveText(
-    "Daily income · all allowances",
+    "Daily estimate · all allowances",
   );
   await page.reload();
   await page.evaluate(() => window.pilotIncomeReady);

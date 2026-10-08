@@ -1,0 +1,313 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-07T15:28:57.077631+00:00",
+  "title": "Design System: TG Pilot Planner",
+  "extensions": {
+    "colorMeta": {
+      "purple": {
+        "role": "primary",
+        "displayName": "Purple",
+        "tonalRamp": [
+          "oklch(15.00% 0.13438 299.67)",
+          "oklch(26.43% 0.13438 299.67)",
+          "oklch(37.86% 0.13438 299.67)",
+          "oklch(49.29% 0.13438 299.67)",
+          "oklch(60.71% 0.13438 299.67)",
+          "oklch(72.14% 0.13438 299.67)",
+          "oklch(83.57% 0.13438 299.67)",
+          "oklch(95.00% 0.13438 299.67)"
+        ]
+      },
+      "purple-soft": {
+        "role": "primary",
+        "displayName": "Purple Soft",
+        "tonalRamp": [
+          "oklch(15.00% 0.01428 308.29)",
+          "oklch(26.43% 0.01428 308.29)",
+          "oklch(37.86% 0.01428 308.29)",
+          "oklch(49.29% 0.01428 308.29)",
+          "oklch(60.71% 0.01428 308.29)",
+          "oklch(72.14% 0.01428 308.29)",
+          "oklch(83.57% 0.01428 308.29)",
+          "oklch(95.00% 0.01428 308.29)"
+        ]
+      },
+      "magenta": {
+        "role": "secondary",
+        "displayName": "Magenta",
+        "tonalRamp": [
+          "oklch(15.00% 0.17585 348.34)",
+          "oklch(26.43% 0.17585 348.34)",
+          "oklch(37.86% 0.17585 348.34)",
+          "oklch(49.29% 0.17585 348.34)",
+          "oklch(60.71% 0.17585 348.34)",
+          "oklch(72.14% 0.17585 348.34)",
+          "oklch(83.57% 0.17585 348.34)",
+          "oklch(95.00% 0.17585 348.34)"
+        ]
+      },
+      "gold": {
+        "role": "secondary",
+        "displayName": "Gold",
+        "tonalRamp": [
+          "oklch(15.00% 0.11877 81.93)",
+          "oklch(26.43% 0.11877 81.93)",
+          "oklch(37.86% 0.11877 81.93)",
+          "oklch(49.29% 0.11877 81.93)",
+          "oklch(60.71% 0.11877 81.93)",
+          "oklch(72.14% 0.11877 81.93)",
+          "oklch(83.57% 0.11877 81.93)",
+          "oklch(95.00% 0.11877 81.93)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.05680 306.40)",
+          "oklch(26.43% 0.05680 306.40)",
+          "oklch(37.86% 0.05680 306.40)",
+          "oklch(49.29% 0.05680 306.40)",
+          "oklch(60.71% 0.05680 306.40)",
+          "oklch(72.14% 0.05680 306.40)",
+          "oklch(83.57% 0.05680 306.40)",
+          "oklch(95.00% 0.05680 306.40)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "tonalRamp": [
+          "oklch(15.00% 0.02647 307.91)",
+          "oklch(26.43% 0.02647 307.91)",
+          "oklch(37.86% 0.02647 307.91)",
+          "oklch(49.29% 0.02647 307.91)",
+          "oklch(60.71% 0.02647 307.91)",
+          "oklch(72.14% 0.02647 307.91)",
+          "oklch(83.57% 0.02647 307.91)",
+          "oklch(95.00% 0.02647 307.91)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "tonalRamp": [
+          "oklch(15.00% 0.01440 308.29)",
+          "oklch(26.43% 0.01440 308.29)",
+          "oklch(37.86% 0.01440 308.29)",
+          "oklch(49.29% 0.01440 308.29)",
+          "oklch(60.71% 0.01440 308.29)",
+          "oklch(72.14% 0.01440 308.29)",
+          "oklch(83.57% 0.01440 308.29)",
+          "oklch(95.00% 0.01440 308.29)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "tonalRamp": [
+          "oklch(15.00% 0.00000 0.00)",
+          "oklch(26.43% 0.00000 0.00)",
+          "oklch(37.86% 0.00000 0.00)",
+          "oklch(49.29% 0.00000 0.00)",
+          "oklch(60.71% 0.00000 0.00)",
+          "oklch(72.14% 0.00000 0.00)",
+          "oklch(83.57% 0.00000 0.00)",
+          "oklch(95.00% 0.00000 0.00)"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Background",
+        "tonalRamp": [
+          "oklch(15.00% 0.00283 308.43)",
+          "oklch(26.43% 0.00283 308.43)",
+          "oklch(37.86% 0.00283 308.43)",
+          "oklch(49.29% 0.00283 308.43)",
+          "oklch(60.71% 0.00283 308.43)",
+          "oklch(72.14% 0.00283 308.43)",
+          "oklch(83.57% 0.00283 308.43)",
+          "oklch(95.00% 0.00283 308.43)"
+        ]
+      },
+      "warning": {
+        "role": "semantic",
+        "displayName": "Warning",
+        "tonalRamp": [
+          "oklch(15.00% 0.08913 75.05)",
+          "oklch(26.43% 0.08913 75.05)",
+          "oklch(37.86% 0.08913 75.05)",
+          "oklch(49.29% 0.08913 75.05)",
+          "oklch(60.71% 0.08913 75.05)",
+          "oklch(72.14% 0.08913 75.05)",
+          "oklch(83.57% 0.08913 75.05)",
+          "oklch(95.00% 0.08913 75.05)"
+        ]
+      },
+      "warning-bg": {
+        "role": "semantic",
+        "displayName": "Warning Bg",
+        "tonalRamp": [
+          "oklch(15.00% 0.02153 83.26)",
+          "oklch(26.43% 0.02153 83.26)",
+          "oklch(37.86% 0.02153 83.26)",
+          "oklch(49.29% 0.02153 83.26)",
+          "oklch(60.71% 0.02153 83.26)",
+          "oklch(72.14% 0.02153 83.26)",
+          "oklch(83.57% 0.02153 83.26)",
+          "oklch(95.00% 0.02153 83.26)"
+        ]
+      },
+      "error": {
+        "role": "semantic",
+        "displayName": "Error",
+        "tonalRamp": [
+          "oklch(15.00% 0.15918 18.00)",
+          "oklch(26.43% 0.15918 18.00)",
+          "oklch(37.86% 0.15918 18.00)",
+          "oklch(49.29% 0.15918 18.00)",
+          "oklch(60.71% 0.15918 18.00)",
+          "oklch(72.14% 0.15918 18.00)",
+          "oklch(83.57% 0.15918 18.00)",
+          "oklch(95.00% 0.15918 18.00)"
+        ]
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "Primary Hover",
+        "tonalRamp": [
+          "oklch(15.00% 0.14940 302.38)",
+          "oklch(26.43% 0.14940 302.38)",
+          "oklch(37.86% 0.14940 302.38)",
+          "oklch(49.29% 0.14940 302.38)",
+          "oklch(60.71% 0.14940 302.38)",
+          "oklch(72.14% 0.14940 302.38)",
+          "oklch(83.57% 0.14940 302.38)",
+          "oklch(95.00% 0.14940 302.38)"
+        ]
+      }
+    },
+    "shadows": [
+      {
+        "name": "dialog",
+        "value": "0 16px 60px #1e0b3430",
+        "purpose": "Task dialogs."
+      }
+    ],
+    "motion": [
+      {
+        "name": "button-background",
+        "value": "background 0.15s",
+        "purpose": "Button state changes only when reduced motion is not requested."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "width-390",
+        "value": "390px"
+      },
+      {
+        "name": "width-600",
+        "value": "600px"
+      },
+      {
+        "name": "width-768",
+        "value": "768px"
+      },
+      {
+        "name": "width-1000",
+        "value": "1000px"
+      },
+      {
+        "name": "width-1024",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Existing primary action treatment.",
+      "html": "<button class=\"ds-button-primary\" type=\"button\">Choose schedule PDF</button>",
+      "css": ".ds-button-primary{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;border:1px solid var(--line);border-radius:8px;padding:9px 12px;font:600 .875rem/1.5 -apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;cursor:pointer;background:var(--purple);border-color:var(--purple);color:var(--paper);}.ds-button-primary:hover{background:#4b1b79;}.ds-button-primary:focus-visible{outline:3px solid var(--magenta);outline-offset:3px;}.ds-button-primary:disabled{opacity:.5;cursor:default;}@media(prefers-reduced-motion:no-preference){.ds-button-primary{transition:background .15s;}}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Existing secondary action treatment.",
+      "html": "<button class=\"ds-button-secondary\" type=\"button\">Replace PDF</button>",
+      "css": ".ds-button-secondary{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;border:1px solid var(--line);border-radius:8px;padding:9px 12px;font:600 .875rem/1.5 -apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;cursor:pointer;background:var(--paper);color:var(--purple);}.ds-button-secondary:hover{background:var(--purple-soft);}.ds-button-secondary:focus-visible{outline:3px solid var(--magenta);outline-offset:3px;}.ds-button-secondary:disabled{opacity:.5;cursor:default;}@media(prefers-reduced-motion:no-preference){.ds-button-secondary{transition:background .15s;}}"
+    },
+    {
+      "name": "Text Button",
+      "kind": "button",
+      "refersTo": "button-text",
+      "description": "Existing text action treatment.",
+      "html": "<button class=\"ds-button-text\" type=\"button\">Cancel</button>",
+      "css": ".ds-button-text{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;border:1px solid var(--line);border-radius:8px;padding:9px 12px;font:600 .875rem/1.5 -apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;cursor:pointer;background:transparent;border-color:transparent;color:var(--purple);}.ds-button-text:hover{background:var(--purple-soft);}.ds-button-text:focus-visible{outline:3px solid var(--magenta);outline-offset:3px;}.ds-button-text:disabled{opacity:.5;cursor:default;}@media(prefers-reduced-motion:no-preference){.ds-button-text{transition:background .15s;}}"
+    },
+    {
+      "name": "Salary Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Settings input with its existing label and focus treatment.",
+      "html": "<label class=\"ds-field\"><span>Monthly base salary (฿)</span><input type=\"number\" placeholder=\"0\" min=\"0\"></label>",
+      "css": ".ds-field{display:grid;gap:6px;font:400 .875rem/1.5 -apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;color:var(--muted)}.ds-field input{font:inherit;font-size:1rem;min-height:46px;padding:10px 12px;border:1px solid #d6cddb;border-radius:7px;background:var(--paper);color:var(--ink)}.ds-field input:focus-visible{outline:3px solid var(--magenta);outline-offset:3px;}"
+    },
+    {
+      "name": "Identity Bar",
+      "kind": "nav",
+      "refersTo": "identity-bar",
+      "description": "Purple product identity and income privacy control.",
+      "html": "<div class=\"ds-bar\"><span>TG Pilot Planner</span><button type=\"button\" aria-label=\"Hide income\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\"><path d=\"M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg></button></div>",
+      "css": ".ds-bar{display:flex;align-items:center;justify-content:space-between;min-height:44px;padding:0 12px;background:var(--purple);color:var(--paper);box-shadow:0 3px 0 var(--gold);font:400 .8125rem/1.5 -apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif}.ds-bar button{width:44px;min-height:44px;border:0;border-radius:8px;color:inherit;background:transparent;cursor:pointer}.ds-bar button:hover{background:#ffffff18}.ds-bar button:focus-visible{outline:3px solid var(--magenta);outline-offset:3px;}"
+    },
+    {
+      "name": "Schedule Container",
+      "kind": "card",
+      "refersTo": "section",
+      "description": "Existing white bordered section shell.",
+      "html": "<section class=\"ds-section\"><h2>Monthly calendar</h2></section>",
+      "css": ".ds-section{border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);color:var(--ink);overflow:hidden}.ds-section h2{padding:16px 14px 12px;margin:0;font:700 1.1875rem/1.5 -apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;letter-spacing:-.35px}"
+    },
+    {
+      "name": "Duty Tag",
+      "kind": "chip",
+      "description": "Non-flight duty label using the existing neutral tag treatment.",
+      "html": "<span class=\"ds-duty\">SBY</span>",
+      "css": ".ds-duty{display:inline-flex;font:600 .625rem/1.15 PilotFlightLabel,ui-monospace,monospace;background:#f1f1f4;color:#5c5765;border-radius:3px;padding:3px 4px}"
+    },
+    {
+      "name": "Flight Label",
+      "kind": "custom",
+      "description": "Illustrative flight number and airport pair in the existing data typography.",
+      "html": "<span class=\"ds-flight\" aria-label=\"Illustrative flight label\"><span>000</span><span>BKK</span></span>",
+      "css": ".ds-flight{display:flex;flex-wrap:wrap;max-width:100%;column-gap:.2ch;width:max-content;font:600 .75rem/1.2 PilotFlightLabel,ui-monospace,monospace;color:var(--purple)}.ds-flight span{white-space:nowrap}.ds-flight span+span{color:#74677e}"
+    }
+  ],
+  "narrative": {
+    "overview": "This record describes the existing CSS and components in `index.html`. It preserves the current interface for live variations; it establishes no new visual direction. Creative metaphors and additional brand language remain undecided.\n\nThe interface places a compact monthly calendar on a pale background beneath a purple identity bar. White containers, fine borders, restrained gold accents, and system typography support practical schedule review. Existing copy uses direct, personal language such as “Your schedule” and “Choose schedule PDF.”",
+    "keyCharacteristics": [
+      "Compact calendar with seven equal date columns.",
+      "Purple actions and income figures on light surfaces.",
+      "System text with bundled monospace flight labels.",
+      "Flat containers and elevated task dialogs."
+    ],
+    "rules": [],
+    "dos": [
+      "**Do** preserve existing palette roles, bundled data fonts, and responsive calendar structure during live refinement.",
+      "**Do** retain visible keyboard focus and safe-area-aware layout.",
+      "**Do** preserve income privacy and independently sized exports.",
+      "**Do** distinguish today's date from keyboard focus."
+    ],
+    "donts": [
+      "**Don't** treat missing documentation as permission to replace the existing identity.",
+      "**Don't** apply the fixed export layout or small calendar labels to general forms and body copy.",
+      "**Don't** add a persistent selection highlight when opening another day.",
+      "**Don't** expose hidden income through decorative or preview content."
+    ]
+  }
+}

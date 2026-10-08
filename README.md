@@ -1,6 +1,6 @@
 # TG Pilot Planner
 
-A mobile-first, calendar-first planner for the current THAI monthly crew schedule PDF format. After importing a roster, the month header includes Share and Settings. Replace the monthly PDF in Settings. Today is highlighted directly in the calendar. Calendar rows use moderate spacing and grow only when flight labels need more room. Enlarged text and unusually dense days can still require scrolling.
+A mobile-first, calendar-first planner for the current THAI monthly crew schedule PDF format. After importing a roster, the month header includes Share and Settings. Replace the monthly PDF in Settings. Today is highlighted directly in the calendar. Calendar rows use moderate spacing and grow only when flight labels need more room. Narrow screens and enlarged text use scrolling inside the seven-column calendar to preserve readable flight labels and times; a cue appears when more dates are offscreen. Unusually dense days can also increase its height.
 
 On phones, tapping a calendar date opens its details in a modal. On iPad and larger screens, details appear beside the calendar. The app estimates income, allows flight/duty corrections, exports calendar images, and reopens offline after initial setup.
 
@@ -38,9 +38,13 @@ Shared images contain the month, pilot name, date range, duties, flight numberâ€
 
 Use the eye icon in the purple identity bar or day details to hide income. The preference is saved in localStorage and restored on the next visit. Privacy mode hides calendar amounts, day pay details, monthly totals, and salary settings; shared images omit daily amounts. In the sharing dialog, Include monthly income can explicitly add monthly figures to that image while the page stays private. Flight numbers, routes, times, and editing remain available.
 
+The calendar names its active daily estimate basis beside the monthly-income link. Monthly income includes salary and all flight allowances regardless of the daily display setting. The daily legend follows income privacy. Flight edit and delete controls have separated 44-pixel targets.
+
 Today retains the calendar highlight. Opening another day does not leave a selection highlight; keyboard users still receive a focus indicator and return focus after closing a dialog.
 
 ## Offline and saved data
+
+The first-use screen provides a current-format cue and collapsed PDF/offline help, including the page-1-only and scanned/multi-month exclusions.
 
 Visit the site online once and wait for **Offline ready** before relying on offline reopening. The app caches its own page and required browser libraries, and stores the PDF, parsed schedule, and manual edits in IndexedDB. Clearing the browser's site data also clears the saved schedule.
 
@@ -77,4 +81,4 @@ WebKit offline tests make the origin server unavailable and verify a fresh brows
 
 No representative real crew PDF is included. Synthetic fixtures reproduce the existing parser's expected coordinates; they cannot prove compatibility with every real-world report variation. Do not commit personal schedule PDFs.
 
-Calendar flight ranges show the earliest departure and latest arrival in their respective airport local times, with +1 for next-day arrivals. These are flight times, not reporting or release times. Day details and the flight editor show date-aware UTC offsets for each endpoint, including daylight-saving and fractional offsets; calendar cells and exported calendars omit offset labels. Incomplete days omit the range. All flights and times remain visible; small screens and especially busy months may scroll vertically.
+Calendar flight ranges show the earliest departure and latest arrival in their respective airport local times, with +1 for next-day arrivals. These are flight times, not reporting or release times. Day details and the flight editor show date-aware UTC offsets for each endpoint, including daylight-saving and fractional offsets; calendar cells and exported calendars omit offset labels. Incomplete days omit the range. All flights and times remain visible. Flight numbers and airport codes stay intact, with wrapping between those tokens when needed. The calendar can scroll horizontally within its own region on narrow screens or with enlarged text, and especially busy months may scroll vertically.
